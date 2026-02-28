@@ -6,6 +6,7 @@ import type { Database } from "@/supabase/database.types";
 type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 type PostInsert = Database["public"]["Tables"]["posts"]["Insert"];
 type PostUpdate = Database["public"]["Tables"]["posts"]["Update"];
+type AILogInsert = Database["public"]["Tables"]["ai_logs"]["Insert"];
 
 interface SupabaseAuthUser {
   id: string;
@@ -120,5 +121,12 @@ export async function deletePostByIdForUser(id: string, userId: string): Promise
   const query = `posts?id=eq.${id}&user_id=eq.${userId}`;
   await request<void>(query, {
     method: "DELETE",
+  });
+}
+
+export async function insertAILog(log: AILogInsert): Promise<void> {
+  await request<SupabaseResponse<AILogInsert[]>>("ai_logs", {
+    method: "POST",
+    body: JSON.stringify(log),
   });
 }
