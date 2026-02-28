@@ -1,39 +1,22 @@
-import { getUpcomingEvents } from "@/lib/dashboard";
-import { formatDateTime } from "@/lib/date";
+import { MonthlyCalendar } from "@/components/monthly-calendar";
+import { listPosts } from "@/lib/posts";
 
 export default async function CalendarPage() {
-  const events = await getUpcomingEvents();
+  const posts = await listPosts();
+
+  const scheduledPosts = posts.map((post) => ({
+    id: post.id,
+    title: post.title,
+    scheduled_date: post.created_at.slice(0, 10),
+  }));
 
   return (
     <section className="space-y-6">
       <header>
         <h1 className="text-3xl font-semibold">Calendar</h1>
-        <p className="text-slate-600">Your confirmed schedule for this week.</p>
+        <p className="text-slate-600">View posts by date and quickly filter the day&apos;s schedule.</p>
       </header>
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-slate-600">
-            <tr>
-              <th className="px-4 py-3 font-medium">Event</th>
-              <th className="px-4 py-3 font-medium">Time</th>
-              <th className="px-4 py-3 font-medium">Location</th>
-              <th className="px-4 py-3 font-medium">Notes</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
-            {events.map((event) => (
-              <tr key={event.id}>
-                <td className="px-4 py-3 font-medium">{event.title}</td>
-                <td className="px-4 py-3 text-slate-600">
-                  {formatDateTime(event.startsAt)} - {formatDateTime(event.endsAt)}
-                </td>
-                <td className="px-4 py-3 text-slate-600">{event.location}</td>
-                <td className="px-4 py-3 text-slate-500">{event.notes}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <MonthlyCalendar posts={scheduledPosts} />
     </section>
   );
 }
