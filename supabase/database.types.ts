@@ -6,6 +6,9 @@ export interface Database {
           id: string;
           title: string;
           body: string;
+          caption: string | null;
+          image_url: string | null;
+          scheduled_date: string | null;
           created_at: string;
           updated_at: string;
           published: boolean;
@@ -14,6 +17,9 @@ export interface Database {
           id?: string;
           title: string;
           body: string;
+          caption?: string | null;
+          image_url?: string | null;
+          scheduled_date?: string | null;
           created_at?: string;
           updated_at?: string;
           published?: boolean;
@@ -22,6 +28,9 @@ export interface Database {
           id?: string;
           title?: string;
           body?: string;
+          caption?: string | null;
+          image_url?: string | null;
+          scheduled_date?: string | null;
           created_at?: string;
           updated_at?: string;
           published?: boolean;

@@ -49,15 +49,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+const postColumns =
+  "id,title,body,caption,image_url,scheduled_date,created_at,updated_at,published";
+
 export async function selectPosts(): Promise<PostRow[]> {
-  const query = "posts?select=id,title,body,created_at,updated_at,published&order=created_at.desc";
+  const query = `posts?select=${postColumns}&order=created_at.desc`;
   return request<PostRow[]>(query, { method: "GET" });
 }
 
 export async function selectPostById(id: string): Promise<PostRow | null> {
-  const query = `posts?select=id,title,body,created_at,updated_at,published&id=eq.${id}&limit=1`;
+  const query = `posts?select=${postColumns}&id=eq.${id}&limit=1`;
   const rows = await request<PostRow[]>(query, { method: "GET" });
   return rows[0] ?? null;
+}
+
+export async function selectPostsByScheduledDateRange(start: string, end: string): Promise<PostRow[]> {
+  const query = `posts?select=${postColumns}&scheduled_date=gte.${start}&scheduled_date=lte.${end}&order=scheduled_date.asc`;
+  return request<PostRow[]>(query, { method: "GET" });
 }
 
 export async function insertPost(post: PostInsert): Promise<void> {
