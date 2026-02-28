@@ -16,6 +16,10 @@ export interface CalendarEvent {
   notes: string;
 }
 
+export type PostPlatform = "instagram" | "linkedin" | "twitter";
+
+export type PostStatus = "draft" | "planned" | "posted";
+
 export interface Post {
   id: ID;
   title: string;
@@ -25,19 +29,27 @@ export interface Post {
   scheduled_date: string | null;
   created_at: string;
   updated_at: string;
-  published: boolean;
 }
 
 export interface CreatePostInput {
-  title: string;
-  body: string;
+  platform: PostPlatform;
+  title?: string;
+  caption: string;
+  image_url?: string;
+  status: PostStatus;
+  scheduled_date?: string;
+  scheduled_time?: string;
 }
 
 export interface UpdatePostInput {
   id: ID;
-  title: string;
-  body: string;
-  published: boolean;
+  platform: PostPlatform;
+  title?: string;
+  caption: string;
+  image_url?: string;
+  status: PostStatus;
+  scheduled_date?: string;
+  scheduled_time?: string;
 }
 
 export interface AIPlanRequest {

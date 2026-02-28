@@ -11,7 +11,6 @@ export interface Database {
           scheduled_date: string | null;
           created_at: string;
           updated_at: string;
-          published: boolean;
         };
         Insert: {
           id?: string;
@@ -22,7 +21,6 @@ export interface Database {
           scheduled_date?: string | null;
           created_at?: string;
           updated_at?: string;
-          published?: boolean;
         };
         Update: {
           id?: string;
@@ -33,7 +31,6 @@ export interface Database {
           scheduled_date?: string | null;
           created_at?: string;
           updated_at?: string;
-          published?: boolean;
         };
       };
     };

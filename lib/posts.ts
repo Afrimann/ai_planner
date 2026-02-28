@@ -1,7 +1,7 @@
 import { cache } from "react";
 
 import {
-  deletePostById,
+  deletePostByIdForUser,
   insertPost,
   selectPostById,
   selectPosts,
@@ -10,8 +10,20 @@ import {
 } from "@/supabase/client";
 import type { CreatePostInput, Post, UpdatePostInput } from "@/types";
 
-export const listPosts = cache(async (): Promise<Post[]> => {
-  return selectPosts();
+function toPost(row: Awaited<ReturnType<typeof selectPostsByUserId>>[number]): Post {
+  return {
+    ...row,
+    title: row.title ?? undefined,
+    image_url: row.image_url ?? undefined,
+    scheduled_date: row.scheduled_date ?? undefined,
+    scheduled_time: row.scheduled_time ?? undefined,
+  };
+}
+
+export const listPostsForAuthenticatedUser = cache(async (): Promise<Post[]> => {
+  const userId = await requireAuthenticatedUserId();
+  const rows = await selectPostsByUserId(userId);
+  return rows.map(toPost);
 });
 
 export const listTodayPosts = cache(async (): Promise<Post[]> => {
@@ -33,10 +45,14 @@ export const listUpcomingPosts = cache(async (): Promise<Post[]> => {
 });
 
 export async function getPostById(id: string): Promise<Post | null> {
-  return selectPostById(id);
+  const userId = await requireAuthenticatedUserId();
+  const row = await selectPostByIdForUser(id, userId);
+  return row ? toPost(row) : null;
 }
 
 export async function createPost(input: CreatePostInput): Promise<void> {
+  const userId = await requireAuthenticatedUserId();
+
   await insertPost({
     title: input.title,
     body: input.body,
@@ -56,5 +72,12 @@ export async function updatePost(input: UpdatePostInput): Promise<void> {
 }
 
 export async function deletePost(id: string): Promise<void> {
-  await deletePostById(id);
+  const userId = await requireAuthenticatedUserId();
+  const existingPost = await selectPostByIdForUser(id, userId);
+
+  if (!existingPost) {
+    throw new Error("Post not found or access denied.");
+  }
+
+  await deletePostByIdForUser(id, userId);
 }

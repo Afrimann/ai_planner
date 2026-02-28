@@ -6,9 +6,22 @@ import { redirect } from "next/navigation";
 import { createPost, deletePost, updatePost } from "@/lib/posts";
 import { parseCreatePostInput, parseUpdatePostInput } from "@/lib/validators";
 
+function toActionErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Unexpected server error while processing post action.";
+}
+
 export async function createPostAction(formData: FormData): Promise<void> {
-  const input = parseCreatePostInput(formData);
-  await createPost(input);
+  try {
+    const input = parseCreatePostInput(formData);
+    await createPost(input);
+  } catch (error) {
+    throw new Error(toActionErrorMessage(error));
+  }
+
   revalidatePath("/posts");
 }
 
@@ -18,13 +31,24 @@ export async function deletePostAction(formData: FormData): Promise<void> {
     throw new Error("Invalid post id.");
   }
 
-  await deletePost(id);
+  try {
+    await deletePost(id);
+  } catch (error) {
+    throw new Error(toActionErrorMessage(error));
+  }
+
   revalidatePath("/posts");
 }
 
 export async function updatePostAction(formData: FormData): Promise<void> {
   const input = parseUpdatePostInput(formData);
-  await updatePost(input);
+
+  try {
+    await updatePost(input);
+  } catch (error) {
+    throw new Error(toActionErrorMessage(error));
+  }
+
   revalidatePath("/posts");
   revalidatePath(`/posts/${input.id}`);
   redirect(`/posts/${input.id}`);
