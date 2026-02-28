@@ -1,36 +1,60 @@
 import Link from "next/link";
 
 import { createPostAction, deletePostAction } from "@/app/posts/actions";
-import { listPosts } from "@/lib/posts";
 import { formatDateTime } from "@/lib/date";
+import { listPostsForAuthenticatedUser } from "@/lib/posts";
 
 export default async function PostsPage() {
-  const posts = await listPosts();
+  const posts = await listPostsForAuthenticatedUser();
 
   return (
     <section className="space-y-8">
       <header>
         <h1 className="text-3xl font-semibold">Posts</h1>
-        <p className="text-slate-600">Create and manage planning updates using server actions.</p>
+        <p className="text-slate-600">Create and manage social posts with authenticated server actions.</p>
       </header>
 
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold">Create post</h2>
         <form action={createPostAction} className="mt-4 grid gap-3">
           <label className="grid gap-1">
-            <span className="text-sm font-medium">Title</span>
-            <input
-              type="text"
-              name="title"
-              required
-              maxLength={120}
-              className="rounded-md border border-slate-300 px-3 py-2"
-            />
+            <span className="text-sm font-medium">Platform</span>
+            <select name="platform" required className="rounded-md border border-slate-300 px-3 py-2">
+              <option value="instagram">Instagram</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="twitter">Twitter</option>
+            </select>
           </label>
           <label className="grid gap-1">
-            <span className="text-sm font-medium">Body</span>
-            <textarea name="body" required rows={4} className="rounded-md border border-slate-300 px-3 py-2" />
+            <span className="text-sm font-medium">Title (optional)</span>
+            <input type="text" name="title" maxLength={120} className="rounded-md border border-slate-300 px-3 py-2" />
           </label>
+          <label className="grid gap-1">
+            <span className="text-sm font-medium">Caption</span>
+            <textarea name="caption" required rows={4} className="rounded-md border border-slate-300 px-3 py-2" />
+          </label>
+          <label className="grid gap-1">
+            <span className="text-sm font-medium">Image URL (optional)</span>
+            <input type="url" name="image_url" className="rounded-md border border-slate-300 px-3 py-2" />
+          </label>
+          <label className="grid gap-1">
+            <span className="text-sm font-medium">Status</span>
+            <select name="status" required className="rounded-md border border-slate-300 px-3 py-2">
+              <option value="draft">Draft</option>
+              <option value="planned">Planned</option>
+              <option value="posted">Posted</option>
+            </select>
+          </label>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="grid gap-1">
+              <span className="text-sm font-medium">Scheduled date (optional)</span>
+              <input type="date" name="scheduled_date" className="rounded-md border border-slate-300 px-3 py-2" />
+            </label>
+            <label className="grid gap-1">
+              <span className="text-sm font-medium">Scheduled time (optional)</span>
+              <input type="time" name="scheduled_time" className="rounded-md border border-slate-300 px-3 py-2" />
+            </label>
+          </div>
           <button type="submit" className="w-fit rounded-md bg-slate-900 px-4 py-2 text-white">
             Save post
           </button>
@@ -43,10 +67,10 @@ export default async function PostsPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <Link href={`/posts/${post.id}`} className="text-lg font-semibold hover:underline">
-                  {post.title}
+                  {post.title || "Untitled post"}
                 </Link>
                 <p className="text-sm text-slate-500">
-                  Updated {formatDateTime(post.updated_at)} · {post.published ? "Published" : "Draft"}
+                  {post.platform} · {post.status} · Updated {formatDateTime(post.updated_at)}
                 </p>
               </div>
               <form action={deletePostAction}>
@@ -56,7 +80,7 @@ export default async function PostsPage() {
                 </button>
               </form>
             </div>
-            <p className="mt-3 whitespace-pre-wrap text-slate-700">{post.body}</p>
+            <p className="mt-3 whitespace-pre-wrap text-slate-700">{post.caption}</p>
           </article>
         ))}
       </section>
