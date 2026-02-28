@@ -5,14 +5,12 @@ create type if not exists public.post_status as enum ('draft', 'planned', 'poste
 
 create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null,
-  platform public.post_platform not null,
-  title text,
-  caption text not null,
+  title text not null,
+  body text not null,
+  caption text,
   image_url text,
-  status public.post_status not null default 'draft',
   scheduled_date date,
-  scheduled_time time,
+  published boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

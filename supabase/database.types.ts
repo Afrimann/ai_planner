@@ -4,40 +4,31 @@ export interface Database {
       posts: {
         Row: {
           id: string;
-          user_id: string;
-          platform: "instagram" | "linkedin" | "twitter";
-          title: string | null;
-          caption: string;
+          title: string;
+          body: string;
+          caption: string | null;
           image_url: string | null;
-          status: "draft" | "planned" | "posted";
           scheduled_date: string | null;
-          scheduled_time: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
-          user_id: string;
-          platform: "instagram" | "linkedin" | "twitter";
-          title?: string | null;
-          caption: string;
+          title: string;
+          body: string;
+          caption?: string | null;
           image_url?: string | null;
-          status?: "draft" | "planned" | "posted";
           scheduled_date?: string | null;
-          scheduled_time?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
-          user_id?: string;
-          platform?: "instagram" | "linkedin" | "twitter";
-          title?: string | null;
-          caption?: string;
+          title?: string;
+          body?: string;
+          caption?: string | null;
           image_url?: string | null;
-          status?: "draft" | "planned" | "posted";
           scheduled_date?: string | null;
-          scheduled_time?: string | null;
           created_at?: string;
           updated_at?: string;
         };

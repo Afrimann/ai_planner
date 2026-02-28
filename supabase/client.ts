@@ -59,77 +59,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-function getAccessTokenFromRequest(): string | null {
-  const authHeader = headers().get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    return authHeader.slice(7).trim();
-  }
+const postColumns =
+  "id,title,body,caption,image_url,scheduled_date,created_at,updated_at,published";
 
-  const cookieStore = cookies();
-  const tokenCookieNames = [
-    "sb-access-token",
-    "supabase-access-token",
-    "access_token",
-  ];
-
-  for (const cookieName of tokenCookieNames) {
-    const token = cookieStore.get(cookieName)?.value;
-    if (token) {
-      return token;
-    }
-  }
-
-  return null;
-}
-
-export async function requireAuthenticatedUserId(): Promise<string> {
-  const { url } = getSupabaseEnv();
-  const accessToken = getAccessTokenFromRequest();
-
-  if (!accessToken) {
-    throw new Error("Unauthorized: missing access token.");
-  }
-
-  const response = await fetch(`${url}/auth/v1/user`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Unauthorized: invalid access token.");
-  }
-
-  const user = (await response.json().catch(() => null)) as SupabaseAuthUser | null;
-  if (!user?.id) {
-    throw new Error("Unauthorized: user not found.");
-  }
-
-  return user.id;
-}
-
-export async function selectPostsByUserId(userId: string): Promise<PostRow[]> {
-  const query = [
-    "posts?select=id,user_id,platform,title,caption,image_url,status,scheduled_date,scheduled_time,created_at,updated_at",
-    `user_id=eq.${userId}`,
-    "order=created_at.desc",
-  ].join("&");
-
+export async function selectPosts(): Promise<PostRow[]> {
+  const query = `posts?select=${postColumns}&order=created_at.desc`;
   return request<PostRow[]>(query, { method: "GET" });
 }
 
-export async function selectPostByIdForUser(id: string, userId: string): Promise<PostRow | null> {
-  const query = [
-    "posts?select=id,user_id,platform,title,caption,image_url,status,scheduled_date,scheduled_time,created_at,updated_at",
-    `id=eq.${id}`,
-    `user_id=eq.${userId}`,
-    "limit=1",
-  ].join("&");
-
+export async function selectPostById(id: string): Promise<PostRow | null> {
+  const query = `posts?select=${postColumns}&id=eq.${id}&limit=1`;
   const rows = await request<PostRow[]>(query, { method: "GET" });
   return rows[0] ?? null;
+}
+
+export async function selectPostsByScheduledDateRange(start: string, end: string): Promise<PostRow[]> {
+  const query = `posts?select=${postColumns}&scheduled_date=gte.${start}&scheduled_date=lte.${end}&order=scheduled_date.asc`;
+  return request<PostRow[]>(query, { method: "GET" });
 }
 
 export async function insertPost(post: PostInsert): Promise<void> {
