@@ -3,6 +3,7 @@ import type { Database } from "@/supabase/database.types";
 type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 type PostInsert = Database["public"]["Tables"]["posts"]["Insert"];
 type PostUpdate = Database["public"]["Tables"]["posts"]["Update"];
+type AILogInsert = Database["public"]["Tables"]["ai_logs"]["Insert"];
 
 interface SupabaseResponse<T> {
   data: T;
@@ -90,4 +91,11 @@ export async function deletePostById(id: string): Promise<void> {
   if (!response.ok) {
     throw new Error(`Failed to delete post (${response.status}).`);
   }
+}
+
+export async function insertAILog(log: AILogInsert): Promise<void> {
+  await request<SupabaseResponse<AILogInsert[]>>("ai_logs", {
+    method: "POST",
+    body: JSON.stringify(log),
+  });
 }

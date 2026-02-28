@@ -1,6 +1,32 @@
 export interface Database {
   public: {
     Tables: {
+      ai_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          action: string;
+          input_text: string;
+          output_text: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          action: string;
+          input_text: string;
+          output_text: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          action?: string;
+          input_text?: string;
+          output_text?: string;
+          created_at?: string;
+        };
+      };
       posts: {
         Row: {
           id: string;
