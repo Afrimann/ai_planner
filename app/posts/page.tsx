@@ -5,13 +5,13 @@ import { formatDateTime } from "@/lib/date";
 import { listPosts } from "@/lib/posts";
 
 export default async function PostsPage() {
-  const posts = await listPosts();
+  const posts = await listPostsForAuthenticatedUser();
 
   return (
     <section className="space-y-8">
       <header>
         <h1 className="text-3xl font-semibold">Posts</h1>
-        <p className="text-slate-600">Create and manage planning updates using server actions.</p>
+        <p className="text-slate-600">Create and manage social posts with authenticated server actions.</p>
       </header>
 
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -22,18 +22,16 @@ export default async function PostsPage() {
             <input type="text" name="user_id" required className="rounded-md border border-slate-300 px-3 py-2" />
           </label>
           <label className="grid gap-1">
-            <span className="text-sm font-medium">Title</span>
-            <input
-              type="text"
-              name="title"
-              required
-              maxLength={120}
-              className="rounded-md border border-slate-300 px-3 py-2"
-            />
+            <span className="text-sm font-medium">Platform</span>
+            <select name="platform" required className="rounded-md border border-slate-300 px-3 py-2">
+              <option value="instagram">Instagram</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="twitter">Twitter</option>
+            </select>
           </label>
           <label className="grid gap-1">
-            <span className="text-sm font-medium">Body</span>
-            <textarea name="body" required rows={4} className="rounded-md border border-slate-300 px-3 py-2" />
+            <span className="text-sm font-medium">Title (optional)</span>
+            <input type="text" name="title" maxLength={120} className="rounded-md border border-slate-300 px-3 py-2" />
           </label>
           <label className="grid gap-1">
             <span className="text-sm font-medium">Image</span>
@@ -51,10 +49,10 @@ export default async function PostsPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <Link href={`/posts/${post.id}`} className="text-lg font-semibold hover:underline">
-                  {post.title}
+                  {post.title || "Untitled post"}
                 </Link>
                 <p className="text-sm text-slate-500">
-                  Updated {formatDateTime(post.updated_at)} · {post.published ? "Published" : "Draft"}
+                  {post.platform} · {post.status} · Updated {formatDateTime(post.updated_at)}
                 </p>
               </div>
               <form action={deletePostAction}>

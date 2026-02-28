@@ -7,15 +7,15 @@ type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 type PostInsert = Database["public"]["Tables"]["posts"]["Insert"];
 type PostUpdate = Database["public"]["Tables"]["posts"]["Update"];
 
-interface SupabaseResponse<T> {
-  data: T;
-  error: null;
+interface SupabaseAuthUser {
+  id: string;
 }
 
 interface SupabaseErrorResponse {
-  error: {
-    message: string;
+  error?: {
+    message?: string;
   };
+  message?: string;
 }
 
 function getSupabaseEnv() {
@@ -28,6 +28,10 @@ function getSupabaseEnv() {
   }
 
   return { url, serviceRoleKey, storageBucket };
+}
+
+function parseErrorMessage(body: SupabaseErrorResponse | null, status: number): string {
+  return body?.error?.message ?? body?.message ?? `Supabase request failed (${status}).`;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -47,11 +51,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as SupabaseErrorResponse | null;
-    throw new Error(body?.error?.message ?? `Supabase request failed (${response.status}).`);
+    throw new Error(parseErrorMessage(body, response.status));
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return (await response.json()) as T;
 }
+
+const postColumns =
+  "id,title,body,caption,image_url,scheduled_date,created_at,updated_at,published";
 
 export async function selectPosts(): Promise<PostRow[]> {
   const query = "posts?select=id,title,body,image_url,created_at,updated_at,published&order=created_at.desc";
@@ -91,33 +102,23 @@ export async function uploadPostImage(userId: string, file: File): Promise<strin
 }
 
 export async function insertPost(post: PostInsert): Promise<void> {
-  await request<SupabaseResponse<PostRow[]>>("posts", {
+  await request<PostRow[]>("posts", {
     method: "POST",
     body: JSON.stringify(post),
   });
 }
 
-export async function updatePostById(id: string, update: PostUpdate): Promise<void> {
-  const query = `posts?id=eq.${id}`;
-  await request<SupabaseResponse<PostRow[]>>(query, {
+export async function updatePostByIdForUser(id: string, userId: string, update: PostUpdate): Promise<void> {
+  const query = `posts?id=eq.${id}&user_id=eq.${userId}`;
+  await request<PostRow[]>(query, {
     method: "PATCH",
     body: JSON.stringify(update),
   });
 }
 
-export async function deletePostById(id: string): Promise<void> {
-  const { url, serviceRoleKey } = getSupabaseEnv();
-
-  const response = await fetch(`${url}/rest/v1/posts?id=eq.${id}`, {
+export async function deletePostByIdForUser(id: string, userId: string): Promise<void> {
+  const query = `posts?id=eq.${id}&user_id=eq.${userId}`;
+  await request<void>(query, {
     method: "DELETE",
-    headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-    },
-    cache: "no-store",
   });
-
-  if (!response.ok) {
-    throw new Error(`Failed to delete post (${response.status}).`);
-  }
 }
