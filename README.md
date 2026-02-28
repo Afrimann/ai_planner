@@ -28,6 +28,7 @@ Production-ready App Router project using TypeScript and Tailwind CSS.
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_STORAGE_BUCKET=post-images
 OPENAI_API_KEY=
 ```
 

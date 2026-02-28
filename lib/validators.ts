@@ -17,11 +17,33 @@ function readRequiredString(formData: FormData, key: string): string {
   return normalized;
 }
 
-function readOptionalString(formData: FormData, key: string): string | undefined {
+function readImageFile(formData: FormData, key: string): File | null {
   const value = formData.get(key);
-  if (typeof value !== "string") {
-    return undefined;
+
+  if (value == null) {
+    return null;
   }
+
+  if (!(value instanceof File)) {
+    throw new Error("Invalid image upload.");
+  }
+
+  if (value.size === 0) {
+    return null;
+  }
+
+  if (!value.type.startsWith("image/")) {
+    throw new Error("Uploaded file must be an image.");
+  }
+
+  return value;
+}
+
+export function parseCreatePostInput(formData: FormData): CreatePostInput {
+  const title = readString(formData, "title");
+  const body = readString(formData, "body");
+  const userId = readString(formData, "user_id");
+  const imageFile = readImageFile(formData, "image");
 
   const normalized = value.trim();
   return normalized || undefined;
@@ -32,7 +54,11 @@ function parsePlatform(value: string): PostPlatform {
     return value as PostPlatform;
   }
 
-  throw new Error("Invalid platform.");
+  if (!/^[a-zA-Z0-9_-]+$/.test(userId)) {
+    throw new Error("user_id can only contain letters, numbers, underscores, and hyphens.");
+  }
+
+  return { title, body, userId, imageFile };
 }
 
 function parseStatus(value: string): PostStatus {

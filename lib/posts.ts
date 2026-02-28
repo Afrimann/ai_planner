@@ -7,6 +7,7 @@ import {
   selectPosts,
   selectPostsByScheduledDateRange,
   updatePostById,
+  uploadPostImage,
 } from "@/supabase/client";
 import type { CreatePostInput, Post, UpdatePostInput } from "@/types";
 
@@ -51,12 +52,16 @@ export async function getPostById(id: string): Promise<Post | null> {
 }
 
 export async function createPost(input: CreatePostInput): Promise<void> {
-  const userId = await requireAuthenticatedUserId();
+  let imageUrl: string | null = null;
+
+  if (input.imageFile) {
+    imageUrl = await uploadPostImage(input.userId, input.imageFile);
+  }
 
   await insertPost({
     title: input.title,
     body: input.body,
-    caption: input.body,
+    image_url: imageUrl,
     published: false,
   });
 }

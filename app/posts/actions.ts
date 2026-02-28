@@ -18,11 +18,11 @@ export async function createPostAction(formData: FormData): Promise<void> {
   try {
     const input = parseCreatePostInput(formData);
     await createPost(input);
+    revalidatePath("/posts");
   } catch (error) {
-    throw new Error(toActionErrorMessage(error));
+    const message = error instanceof Error ? error.message : "Failed to create post.";
+    throw new Error(`Failed to create post: ${message}`);
   }
-
-  revalidatePath("/posts");
 }
 
 export async function deletePostAction(formData: FormData): Promise<void> {

@@ -24,21 +24,16 @@ export interface Post {
   id: ID;
   title: string;
   body: string;
-  caption: string | null;
   image_url: string | null;
-  scheduled_date: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface CreatePostInput {
-  platform: PostPlatform;
-  title?: string;
-  caption: string;
-  image_url?: string;
-  status: PostStatus;
-  scheduled_date?: string;
-  scheduled_time?: string;
+  title: string;
+  body: string;
+  userId: string;
+  imageFile: File | null;
 }
 
 export interface UpdatePostInput {
