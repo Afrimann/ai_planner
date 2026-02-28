@@ -20,6 +20,7 @@ export interface Post {
   id: ID;
   title: string;
   body: string;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
   published: boolean;
@@ -28,6 +29,8 @@ export interface Post {
 export interface CreatePostInput {
   title: string;
   body: string;
+  userId: string;
+  imageFile: File | null;
 }
 
 export interface UpdatePostInput {

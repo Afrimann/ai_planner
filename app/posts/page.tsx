@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { createPostAction, deletePostAction } from "@/app/posts/actions";
-import { listPosts } from "@/lib/posts";
 import { formatDateTime } from "@/lib/date";
+import { listPosts } from "@/lib/posts";
 
 export default async function PostsPage() {
   const posts = await listPosts();
@@ -16,7 +16,11 @@ export default async function PostsPage() {
 
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold">Create post</h2>
-        <form action={createPostAction} className="mt-4 grid gap-3">
+        <form action={createPostAction} encType="multipart/form-data" className="mt-4 grid gap-3">
+          <label className="grid gap-1">
+            <span className="text-sm font-medium">User ID</span>
+            <input type="text" name="user_id" required className="rounded-md border border-slate-300 px-3 py-2" />
+          </label>
           <label className="grid gap-1">
             <span className="text-sm font-medium">Title</span>
             <input
@@ -30,6 +34,10 @@ export default async function PostsPage() {
           <label className="grid gap-1">
             <span className="text-sm font-medium">Body</span>
             <textarea name="body" required rows={4} className="rounded-md border border-slate-300 px-3 py-2" />
+          </label>
+          <label className="grid gap-1">
+            <span className="text-sm font-medium">Image</span>
+            <input type="file" name="image" accept="image/*" className="rounded-md border border-slate-300 px-3 py-2" />
           </label>
           <button type="submit" className="w-fit rounded-md bg-slate-900 px-4 py-2 text-white">
             Save post
@@ -57,6 +65,9 @@ export default async function PostsPage() {
               </form>
             </div>
             <p className="mt-3 whitespace-pre-wrap text-slate-700">{post.body}</p>
+            {post.image_url ? (
+              <img src={post.image_url} alt={`${post.title} image`} className="mt-3 max-h-72 rounded-md border border-slate-200" />
+            ) : null}
           </article>
         ))}
       </section>

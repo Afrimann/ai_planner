@@ -7,9 +7,14 @@ import { createPost, deletePost, updatePost } from "@/lib/posts";
 import { parseCreatePostInput, parseUpdatePostInput } from "@/lib/validators";
 
 export async function createPostAction(formData: FormData): Promise<void> {
-  const input = parseCreatePostInput(formData);
-  await createPost(input);
-  revalidatePath("/posts");
+  try {
+    const input = parseCreatePostInput(formData);
+    await createPost(input);
+    revalidatePath("/posts");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to create post.";
+    throw new Error(`Failed to create post: ${message}`);
+  }
 }
 
 export async function deletePostAction(formData: FormData): Promise<void> {

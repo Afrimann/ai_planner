@@ -6,6 +6,7 @@ export interface Database {
           id: string;
           title: string;
           body: string;
+          image_url: string | null;
           created_at: string;
           updated_at: string;
           published: boolean;
@@ -14,6 +15,7 @@ export interface Database {
           id?: string;
           title: string;
           body: string;
+          image_url?: string | null;
           created_at?: string;
           updated_at?: string;
           published?: boolean;
@@ -22,6 +24,7 @@ export interface Database {
           id?: string;
           title?: string;
           body?: string;
+          image_url?: string | null;
           created_at?: string;
           updated_at?: string;
           published?: boolean;

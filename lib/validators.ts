@@ -14,15 +14,43 @@ function readString(formData: FormData, key: string): string {
   return normalized;
 }
 
+function readImageFile(formData: FormData, key: string): File | null {
+  const value = formData.get(key);
+
+  if (value == null) {
+    return null;
+  }
+
+  if (!(value instanceof File)) {
+    throw new Error("Invalid image upload.");
+  }
+
+  if (value.size === 0) {
+    return null;
+  }
+
+  if (!value.type.startsWith("image/")) {
+    throw new Error("Uploaded file must be an image.");
+  }
+
+  return value;
+}
+
 export function parseCreatePostInput(formData: FormData): CreatePostInput {
   const title = readString(formData, "title");
   const body = readString(formData, "body");
+  const userId = readString(formData, "user_id");
+  const imageFile = readImageFile(formData, "image");
 
   if (title.length > 120) {
     throw new Error("Title must be 120 characters or fewer.");
   }
 
-  return { title, body };
+  if (!/^[a-zA-Z0-9_-]+$/.test(userId)) {
+    throw new Error("user_id can only contain letters, numbers, underscores, and hyphens.");
+  }
+
+  return { title, body, userId, imageFile };
 }
 
 export function parseUpdatePostInput(formData: FormData): UpdatePostInput {

@@ -22,6 +22,9 @@ export default async function PostDetailPage({ params }: PostPageProps) {
         <h1 className="text-3xl font-semibold">Edit post</h1>
         <p className="text-slate-600">Update content and publish status.</p>
       </header>
+      {post.image_url ? (
+        <img src={post.image_url} alt={`${post.title} image`} className="max-h-80 rounded-md border border-slate-200" />
+      ) : null}
       <form action={updatePostAction} className="grid gap-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <input type="hidden" name="id" value={post.id} />
         <label className="grid gap-1">
