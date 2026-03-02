@@ -2,7 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 
-import {Button} from "@/components/ui/Button";
+import { Button } from "../../components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 
 interface ConfirmDialogProps {
@@ -25,7 +25,12 @@ export function ConfirmDialog({
   hiddenFields = {},
 }: ConfirmDialogProps) {
   return (
-    <Modal open={open} title={title} onClose={onClose} maxWidthClassName="max-w-md">
+    <Modal
+      open={open}
+      title={title}
+      onClose={onClose}
+      maxWidthClassName="max-w-md"
+    >
       <p className="text-sm text-zinc-700">{description}</p>
       <form action={formAction} className="mt-5 flex justify-end gap-2">
         {Object.entries(hiddenFields).map(([key, value]) => (
