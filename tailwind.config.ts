@@ -9,8 +9,17 @@ const config: Config = {
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    fontFamily: {
+      sans: ["Inter", "system-ui", "sans-serif"],
+    },
     extend: {
       colors: {
+        brand: {
+          black: "#000000",
+          white: "#ffffff",
+          gray: "#6b7280",
+          light: "#f3f4f6",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -50,6 +59,9 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        glow: "0 18px 40px -20px rgba(0, 0, 0, 0.35)",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -59,10 +71,20 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(14px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "orb-float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-12px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-up": "fade-up 0.4s ease-out",
+        "orb-float": "orb-float 4s ease-in-out infinite",
       },
     },
   },
