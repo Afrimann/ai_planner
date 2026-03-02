@@ -2,7 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 
-import { Button } from "@/components/ui/Button";
+import Button from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 
 interface ConfirmDialogProps {

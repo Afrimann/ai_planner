@@ -23,7 +23,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     "text-black hover:bg-zinc-100 hover:text-black focus-visible:ring-black/20",
 };
 
-export function Button({
+export default function Button({
   className,
   children,
   loading = false,

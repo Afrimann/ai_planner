@@ -4,12 +4,9 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 
-import {
-  signUpAction,
-  type SignUpActionState,
-} from "@/app/auth/actions";
+import { signUpAction, type SignUpActionState } from "@/app/auth/actions";
 import { MailIcon, LockIcon, UserIcon } from "@/components/ui/AuthIcons";
-import { Button } from "@/components/ui/Button";
+import Button from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
@@ -35,7 +32,12 @@ function getStrengthMeta(password: string) {
   const score = rules.filter((rule) => rule.passed).length;
 
   if (!password) {
-    return { score: 0, label: "Add a password", barClass: "bg-[#2d5e4d]", rules };
+    return {
+      score: 0,
+      label: "Add a password",
+      barClass: "bg-[#2d5e4d]",
+      rules,
+    };
   }
   if (score <= 2) {
     return { score, label: "Weak", barClass: "bg-red-400", rules };
@@ -134,7 +136,9 @@ export default function SignUpPage() {
           >
             <div className="mb-2 flex items-center justify-between text-xs">
               <span className="text-slate-300">Password strength</span>
-              <span className="font-semibold text-[#9df7ae]">{strength.label}</span>
+              <span className="font-semibold text-[#9df7ae]">
+                {strength.label}
+              </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-[#1e332c]">
               <motion.div
