@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowUpDown, LayoutGrid, Table as TableIcon } from "lucide-react";
 
 import { PostCard } from "@/components/posts/PostCard";
-import Button from "@/components/ui/Button";
+import {Button} from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import type { Post } from "@/types";
 
