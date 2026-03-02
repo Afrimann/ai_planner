@@ -1,7 +1,24 @@
-import type { CreatePostInput, PostPlatform, PostStatus, UpdatePostInput } from "@/types";
+import type {
+  CreatePostInput,
+  PostPlatform,
+  PostStatus,
+  UpdatePostInput,
+} from "@/types";
 
-const allowedPlatforms: readonly PostPlatform[] = ["instagram", "linkedin", "twitter"];
+const allowedPlatforms: readonly PostPlatform[] = [
+  "instagram",
+  "linkedin",
+  "twitter",
+];
 const allowedStatuses: readonly PostStatus[] = ["draft", "planned", "posted"];
+
+const maxImageSizeBytes = 5 * 1024 * 1024;
+const allowedImageMimeTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
 
 function readRequiredString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -32,21 +49,118 @@ function readImageFile(formData: FormData, key: string): File | null {
     return null;
   }
 
-  if (!value.type.startsWith("image/")) {
-    throw new Error("Uploaded file must be an image.");
+  if (!allowedImageMimeTypes.has(value.type)) {
+    throw new Error("Uploaded file must be JPEG, PNG, WEBP, or GIF.");
+  }
+
+  if (value.size > maxImageSizeBytes) {
+    throw new Error("Uploaded image must be 5MB or smaller.");
   }
 
   return value;
 }
 
-export function parseCreatePostInput(formData: FormData): CreatePostInput {
-  const title = readString(formData, "title");
-  const body = readString(formData, "body");
-  const userId = readString(formData, "user_id");
-  const imageFile = readImageFile(formData, "image");
-
+function readOptionalString(
+  formData: FormData,
+  key: string,
+): string | undefined {
+  const value = formData.get(key);
+  if (value == null || value === "") {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    return undefined;
+  }
   const normalized = value.trim();
   return normalized || undefined;
+}
+
+function isValidDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
+}
+
+function isValidTime(value: string): boolean {
+  return /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/.test(value);
+}
+
+function normalizeTime(value?: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const match = value.match(
+    /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+  );
+
+  if (!match) {
+    return value;
+  }
+
+  return `${match[1]}:${match[2]}`;
+}
+
+function validateScheduling(
+  status: PostStatus,
+  scheduled_date?: string,
+  scheduled_time?: string,
+): void {
+  if (scheduled_time && !scheduled_date) {
+    throw new Error("Scheduled date is required when time is provided.");
+  }
+
+  if (scheduled_date && !isValidDate(scheduled_date)) {
+    throw new Error("Scheduled date must use YYYY-MM-DD format.");
+  }
+
+  if (scheduled_time && !isValidTime(scheduled_time)) {
+    throw new Error("Scheduled time must use HH:MM 24-hour format.");
+  }
+
+  if (status === "planned" && !scheduled_date) {
+    throw new Error("Planned posts require a scheduled date.");
+  }
+
+  if (status === "planned" && scheduled_date) {
+    const scheduled = new Date(`${scheduled_date}T${scheduled_time ?? "00:00"}:00`);
+    const now = new Date();
+    if (scheduled.getTime() < now.getTime() - 60 * 1000) {
+      throw new Error("Scheduled datetime cannot be in the past for planned posts.");
+    }
+  }
+}
+
+export function parseCreatePostInput(formData: FormData): CreatePostInput {
+  const platform = parsePlatform(readRequiredString(formData, "platform"));
+  const caption = readRequiredString(formData, "caption");
+  const status = parseStatus(readRequiredString(formData, "status"));
+  const title = readOptionalString(formData, "title");
+  const image_url = readOptionalString(formData, "image_url");
+  const scheduled_date = readOptionalString(formData, "scheduled_date");
+  const scheduled_time = normalizeTime(
+    readOptionalString(formData, "scheduled_time"),
+  );
+  const imageFile = readImageFile(formData, "image");
+
+  if (caption.length > 2000) {
+    throw new Error("Caption must be 2000 characters or fewer.");
+  }
+
+  if (title && title.length > 120) {
+    throw new Error("Title must be 120 characters or fewer.");
+  }
+
+  validateScheduling(status, scheduled_date, scheduled_time);
+
+  return {
+    platform,
+    caption,
+    status,
+    title,
+    image_url,
+    imageFile,
+    scheduled_date,
+    scheduled_time,
+  };
 }
 
 function parsePlatform(value: string): PostPlatform {
@@ -54,11 +168,7 @@ function parsePlatform(value: string): PostPlatform {
     return value as PostPlatform;
   }
 
-  if (!/^[a-zA-Z0-9_-]+$/.test(userId)) {
-    throw new Error("user_id can only contain letters, numbers, underscores, and hyphens.");
-  }
-
-  return { title, body, userId, imageFile };
+  throw new Error("Invalid platform.");
 }
 
 function parseStatus(value: string): PostStatus {
@@ -69,45 +179,16 @@ function parseStatus(value: string): PostStatus {
   throw new Error("Invalid status.");
 }
 
-function buildPostInput(formData: FormData): Omit<CreatePostInput, never> {
-  const platform = parsePlatform(readRequiredString(formData, "platform"));
-  const caption = readRequiredString(formData, "caption");
-  const status = parseStatus(readRequiredString(formData, "status"));
-  const title = readOptionalString(formData, "title");
-  const image_url = readOptionalString(formData, "image_url");
-  const scheduled_date = readOptionalString(formData, "scheduled_date");
-  const scheduled_time = readOptionalString(formData, "scheduled_time");
-
-  if (caption.length > 2000) {
-    throw new Error("Caption must be 2000 characters or fewer.");
-  }
-
-  if (title && title.length > 120) {
-    throw new Error("Title must be 120 characters or fewer.");
-  }
-
-  return {
-    platform,
-    title,
-    caption,
-    image_url,
-    status,
-    scheduled_date,
-    scheduled_time,
-  };
-}
-
-export function parseCreatePostInput(formData: FormData): CreatePostInput {
-  return buildPostInput(formData);
-}
-
 export function parseUpdatePostInput(formData: FormData): UpdatePostInput {
   const id = readRequiredString(formData, "id");
-  const input = buildPostInput(formData);
+  const base = parseCreatePostInput(formData);
 
   return {
     id,
-    ...input,
+    ...base,
+    // published is not part of the create form but we allow callers to
+    // override it by including a hidden field if necessary.
+    published: formData.get("published") === "true" ? true : undefined,
   };
 }
 

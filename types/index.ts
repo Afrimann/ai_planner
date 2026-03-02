@@ -22,18 +22,29 @@ export type PostStatus = "draft" | "planned" | "posted";
 
 export interface Post {
   id: ID;
-  title: string;
+  user_id: string;
+  platform: PostPlatform;
+  title?: string;
+  caption: string;
   body: string;
   image_url: string | null;
+  status: PostStatus;
+  scheduled_date?: string;
+  scheduled_time?: string;
+  published: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export interface CreatePostInput {
-  title: string;
-  body: string;
-  userId: string;
+  platform: PostPlatform;
+  title?: string;
+  caption: string;
   imageFile: File | null;
+  image_url?: string;
+  status: PostStatus;
+  scheduled_date?: string;
+  scheduled_time?: string;
 }
 
 export interface UpdatePostInput {
@@ -41,10 +52,12 @@ export interface UpdatePostInput {
   platform: PostPlatform;
   title?: string;
   caption: string;
+  imageFile?: File | null;
   image_url?: string;
   status: PostStatus;
   scheduled_date?: string;
   scheduled_time?: string;
+  published?: boolean;
 }
 
 export interface AIPlanRequest {

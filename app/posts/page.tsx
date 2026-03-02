@@ -1,74 +1,114 @@
 import Link from "next/link";
+import { ChevronRight, FileText, Plus, Sparkles } from "lucide-react";
 
-import { createPostAction, deletePostAction } from "@/app/posts/actions";
-import { formatDateTime } from "@/lib/date";
-import { listPosts } from "@/lib/posts";
+import { PostForm } from "@/components/posts/PostForm";
+import { PostList } from "@/components/posts/PostList";
+import { Button } from "@/components/ui/Button";
+import { listPostsForAuthenticatedUser } from "@/lib/posts";
+import { warnPostManagementSupabaseSetup } from "@/lib/supabase-setup";
 
 export default async function PostsPage() {
+  warnPostManagementSupabaseSetup();
+
   const posts = await listPostsForAuthenticatedUser();
+  const upcomingCount = posts.filter((post) => {
+    if (!post.scheduled_date) {
+      return false;
+    }
+    return post.scheduled_date >= new Date().toISOString().slice(0, 10);
+  }).length;
+  const draftCount = posts.filter((post) => post.status === "draft").length;
 
   return (
-    <section className="space-y-8">
-      <header>
-        <h1 className="text-3xl font-semibold">Posts</h1>
-        <p className="text-slate-600">Create and manage social posts with authenticated server actions.</p>
+    <section className="space-y-6">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs text-zinc-500"
+      >
+        <Link href="/dashboard" className="hover:text-black">
+          Dashboard
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="text-black">Posts</span>
+      </nav>
+
+      <header className="rounded-2xl border border-zinc-300 bg-white p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-semibold tracking-tight text-black">
+              Post Management
+            </h1>
+            <p className="text-sm text-zinc-600">
+              Create, schedule, publish, and organize all posts in a single
+              workflow.
+            </p>
+          </div>
+
+          <div className="flex  gap-2">
+            <a href="#post-form">
+              <Button className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  <Plus className="h-4 w-4" />
+                  New Post
+                </div>
+              </Button>
+            </a>
+            <a href="#post-list">
+              <Button variant="secondary" className="">
+                <div className="flex gap-2 items-center">
+                  <FileText className="h-4 w-4" />
+                  View List
+                </div>
+              </Button>
+            </a>
+            <a href="#post-form">
+              <Button variant="secondary">
+                <div className="flex gap-2 items-center">
+                  <Sparkles className="h-4 w-4" />
+                  AI Tools
+                </div>
+              </Button>
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <StatCard
+            label="Total Posts"
+            value={posts.length}
+            helper="All statuses"
+          />
+          <StatCard
+            label="Upcoming"
+            value={upcomingCount}
+            helper="Scheduled ahead"
+          />
+          <StatCard label="Drafts" value={draftCount} helper="Pending review" />
+        </div>
       </header>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold">Create post</h2>
-        <form action={createPostAction} encType="multipart/form-data" className="mt-4 grid gap-3">
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">User ID</span>
-            <input type="text" name="user_id" required className="rounded-md border border-slate-300 px-3 py-2" />
-          </label>
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Platform</span>
-            <select name="platform" required className="rounded-md border border-slate-300 px-3 py-2">
-              <option value="instagram">Instagram</option>
-              <option value="linkedin">LinkedIn</option>
-              <option value="twitter">Twitter</option>
-            </select>
-          </label>
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Title (optional)</span>
-            <input type="text" name="title" maxLength={120} className="rounded-md border border-slate-300 px-3 py-2" />
-          </label>
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Image</span>
-            <input type="file" name="image" accept="image/*" className="rounded-md border border-slate-300 px-3 py-2" />
-          </label>
-          <button type="submit" className="w-fit rounded-md bg-slate-900 px-4 py-2 text-white">
-            Save post
-          </button>
-        </form>
-      </section>
-
-      <section className="space-y-3">
-        {posts.map((post) => (
-          <article key={post.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <Link href={`/posts/${post.id}`} className="text-lg font-semibold hover:underline">
-                  {post.title || "Untitled post"}
-                </Link>
-                <p className="text-sm text-slate-500">
-                  {post.platform} · {post.status} · Updated {formatDateTime(post.updated_at)}
-                </p>
-              </div>
-              <form action={deletePostAction}>
-                <input type="hidden" name="id" value={post.id} />
-                <button type="submit" className="rounded-md border border-red-300 px-3 py-1 text-sm text-red-700">
-                  Delete
-                </button>
-              </form>
-            </div>
-            <p className="mt-3 whitespace-pre-wrap text-slate-700">{post.body}</p>
-            {post.image_url ? (
-              <img src={post.image_url} alt={`${post.title} image`} className="mt-3 max-h-72 rounded-md border border-slate-200" />
-            ) : null}
-          </article>
-        ))}
-      </section>
+      <div className="grid gap-6 2xl:grid-cols-[430px_1fr]">
+        <PostForm />
+        <PostList posts={posts} />
+      </div>
     </section>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  helper,
+}: {
+  label: string;
+  value: number;
+  helper: string;
+}) {
+  return (
+    <article className="rounded-xl border border-zinc-300 bg-zinc-50 p-4">
+      <p className="text-xs uppercase tracking-wide text-zinc-600">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-black">{value}</p>
+      <p className="text-xs text-zinc-500">{helper}</p>
+    </article>
   );
 }
