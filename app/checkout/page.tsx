@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 import { LandingHeader } from "@/components/LandingHeader";
@@ -29,11 +29,20 @@ const GLOBAL_STYLES = `
 export default function CheckoutPage() {
   const user = useCurrentUser();
   const router = useRouter();
-  const params = useSearchParams();
-  const plan = params?.get("plan");
+  const [plan, setPlan] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // grab query param on mount (avoid useSearchParams hook to prevent
+  // prerendering conflicts)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const p = params.get("plan");
+    if (p) {
+      setPlan(p);
+    }
+  }, []);
 
   useEffect(() => {
     // redirect unauthenticated visitors
