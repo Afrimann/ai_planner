@@ -3,7 +3,7 @@
 import { useFormStatus } from "react-dom";
 
 import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 interface ConfirmDialogProps {
   open: boolean;

@@ -11,7 +11,7 @@ import {
 import { MailIcon } from "@/components/ui/AuthIcons";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 export default function ForgotPasswordPage() {
   const initialState: ForgotPasswordActionState = { fieldErrors: {} };

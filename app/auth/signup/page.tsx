@@ -9,7 +9,7 @@ import { MailIcon, LockIcon, UserIcon } from "@/components/ui/AuthIcons";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type PasswordRule = {
