@@ -12,6 +12,8 @@ import {
 export interface AuthenticatedUser {
   id: string;
   email?: string;
+  fullName?: string;
+  metadata?: Record<string, unknown>;
 }
 
 function extractBearerToken(value: string | null): string {
@@ -30,7 +32,18 @@ async function getUserFromTokenOrThrow(
     throw new Error("Unauthorized");
   }
 
-  return { id: user.id, email: user.email };
+  // pull full name if it's stored in user_metadata.full_name
+  const fullName =
+    typeof user.user_metadata?.full_name === "string"
+      ? user.user_metadata.full_name
+      : undefined;
+
+  return {
+    id: user.id,
+    email: user.email,
+    fullName,
+    metadata: user.user_metadata,
+  };
 }
 
 export async function requireAuthenticatedUser(

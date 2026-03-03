@@ -8,14 +8,18 @@ import {
   exchangePasswordForSession,
   persistAuthSessionCookies,
   sendPasswordResetEmail,
+  updateUser,
 } from "@/lib/supabase-auth";
+import { getSupabaseEnv } from "@/supabase/client";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type FieldErrors<TField extends string> = Partial<Record<TField, string>>;
 
 export interface SignUpActionState {
-  fieldErrors: FieldErrors<"fullName" | "email" | "password" | "confirmPassword">;
+  fieldErrors: FieldErrors<
+    "fullName" | "email" | "password" | "confirmPassword"
+  >;
   formError?: string;
 }
 
@@ -109,6 +113,7 @@ export async function signUpAction(
   }
 
   try {
+    // create user with default free plan in metadata
     await createUserWithAdmin(fullName, email, password);
     const session = await exchangePasswordForSession(email, password);
     await persistAuthSessionCookies(session);
@@ -158,6 +163,27 @@ export async function signInAction(
 
   try {
     const session = await exchangePasswordForSession(email, password);
+    // ensure metadata.plan exists (some older accounts may lack it)
+    if (!session.user.user_metadata?.plan) {
+      // rather than patching with the limited access token (which was
+      // producing 405 errors), use the service-role admin endpoint to
+      // set a default plan for the user.
+      const { url, serviceRoleKey } = getSupabaseEnv();
+      await fetch(`${url}/auth/v1/admin/users/${session.user.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({
+          user_metadata: {
+            ...(session.user.user_metadata || {}),
+            plan: "free",
+          },
+        }),
+      });
+    }
     await persistAuthSessionCookies(session);
   } catch (error) {
     const message =

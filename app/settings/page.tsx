@@ -1,10 +1,18 @@
-export default function SettingsPage() {
+import { redirect } from "next/navigation";
+import { getCurrentAuthenticatedUser } from "@/lib/auth";
+import SettingsClient from "./SettingsClient";
+
+// server component that fetches the current user and passes it to a
+// client-side form component
+export default async function SettingsPage() {
+  const user = await getCurrentAuthenticatedUser();
+  if (!user) {
+    redirect("/auth/signin");
+  }
+
   return (
-    <section className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-semibold">Settings</h1>
-        <p className="text-gray-600">Manage your account and preferences.</p>
-      </header>
+    <section className="">
+      <SettingsClient user={user} />
     </section>
   );
 }

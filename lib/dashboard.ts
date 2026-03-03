@@ -6,6 +6,7 @@ import type { Post, PostPlatform, PostStatus } from "@/types";
 export interface DashboardUser {
   id: string;
   email?: string;
+  plan?: string;
 }
 
 export interface DashboardMetric {
@@ -82,7 +83,9 @@ function generateWeeklyLabels(weeks: number): string[] {
   for (let index = weeks - 1; index >= 0; index -= 1) {
     const date = new Date(today);
     date.setDate(today.getDate() - index * 7);
-    labels.push(date.toLocaleDateString(undefined, { month: "short", day: "numeric" }));
+    labels.push(
+      date.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    );
   }
 
   return labels;
@@ -104,7 +107,9 @@ function groupPostsIntoWeeklySeries(
   posts.forEach((post) => {
     const pivotDate = post.scheduled_date ?? asDateOnly(post.updated_at);
     const date = new Date(`${pivotDate}T00:00:00`);
-    const diffDays = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(
+      (today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+    );
     const bucket = 5 - Math.floor(diffDays / 7);
 
     if (bucket < 0 || bucket > 5) {
@@ -121,7 +126,9 @@ function groupPostsIntoWeeklySeries(
 
   aiLogs.forEach((log) => {
     const date = new Date(log.created_at);
-    const diffDays = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(
+      (today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+    );
     const bucket = 5 - Math.floor(diffDays / 7);
 
     if (bucket < 0 || bucket > 5) {
@@ -155,7 +162,8 @@ function buildAlerts(
       id: "pipeline-empty",
       kind: "info",
       title: "No upcoming posts",
-      message: "Schedule at least one post in the next 7 days to keep your pipeline active.",
+      message:
+        "Schedule at least one post in the next 7 days to keep your pipeline active.",
     });
   }
 
@@ -177,6 +185,13 @@ export async function getDashboardData(): Promise<DashboardData> {
   if (!user) {
     throw new Error("Unauthorized");
   }
+
+  const dashboardUser: DashboardUser = {
+    id: user.id,
+    email: user.email,
+    plan:
+      typeof user.metadata?.plan === "string" ? user.metadata.plan : undefined,
+  };
 
   const [posts, aiLogsRaw] = await Promise.all([
     listPostsForAuthenticatedUser(),
@@ -209,7 +224,9 @@ export async function getDashboardData(): Promise<DashboardData> {
   const postedRatio = posts.length
     ? clampInt((statusCounts.posted / posts.length) * 100)
     : 0;
-  const aiRewriteCount = aiLogs.filter((log) => log.action === "rewrite_caption").length;
+  const aiRewriteCount = aiLogs.filter(
+    (log) => log.action === "rewrite_caption",
+  ).length;
 
   const metrics: DashboardMetric[] = [
     {

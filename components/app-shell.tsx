@@ -6,41 +6,48 @@ import { usePathname } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import MainContent from "@/components/layout/MainContent";
-
-// The AppShell is the application's root layout wrapper.  It provides a
-// responsive sidebar that collapses on desktop and slides in as an
-// overlay on mobile, a top header with a menu toggle and user menu, and
-// an animated content area driven by Framer Motion.
-//
-// Pages do not need to know about any of this; they simply render as
-// children of AppShell in `app/layout.tsx`.
+import { ScheduledPostNotifier } from "@/components/posts/ScheduledPostNotifier";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
-  // always compute this value but don't early-return before hooks
   const isAuthRoute = pathname.startsWith("/auth");
 
   useEffect(() => {
-    // close mobile overlay when navigating
     setSidebarOpen(false);
   }, [pathname]);
 
   if (isAuthRoute) {
-    // still render children inside MainContent so that page-level
-    // transitions are preserved, but omit sidebar/header entirely.
     return (
-      <div className="min-h-screen bg-white text-gray-900">
+      <div
+        style={{ minHeight: "100vh", background: "#07070f", color: "#eeeaf8" }}
+      >
         <MainContent>{children}</MainContent>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-white text-gray-900">
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        background: "#07070f",
+        color: "#eeeaf8",
+        overflow: "hidden",
+      }}
+    >
+      <ScheduledPostNotifier />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex flex-col flex-1">
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
         <Header
           onMenuToggle={() => setSidebarOpen((o) => !o)}
           sidebarOpen={sidebarOpen}
