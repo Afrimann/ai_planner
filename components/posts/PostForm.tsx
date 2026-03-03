@@ -9,11 +9,11 @@ import {
   generateCaptionForPostAction,
 } from "@/app/posts/actions";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "../../components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Button } from "@/components/ui/Button";
 // import { warnPostManagementSupabaseSetup } from "@/lib/supabase-setup";
 import type { Post } from "@/types";
 

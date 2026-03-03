@@ -6,10 +6,10 @@ import { motion } from "framer-motion";
 
 import { signInAction, type SignInActionState } from "@/app/auth/actions";
 import { LockIcon, MailIcon } from "@/components/ui/AuthIcons";
-import {Button} from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
+import { Button } from "@/components/ui/Button";
 
 export default function SignInPage() {
   const initialState: SignInActionState = { fieldErrors: {} };

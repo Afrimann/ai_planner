@@ -6,10 +6,10 @@ import { motion } from "framer-motion";
 
 import { signUpAction, type SignUpActionState } from "@/app/auth/actions";
 import { MailIcon, LockIcon, UserIcon } from "@/components/ui/AuthIcons";
-import {Button} from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 type PasswordRule = {
