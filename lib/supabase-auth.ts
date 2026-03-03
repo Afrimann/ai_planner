@@ -41,6 +41,13 @@ function getSupabaseAuthEnv(options?: { requireServiceRole?: boolean }) {
     throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY.");
   }
 
+  if (!url.includes("supabase.co")) {
+    console.warn(
+      "getSupabaseAuthEnv: URL does not look like a Supabase endpoint",
+      url,
+    );
+  }
+
   return { url, anonKey, serviceRoleKey };
 }
 
@@ -108,6 +115,8 @@ export async function createUserWithAdmin(
     requireServiceRole: true,
   });
 
+  // by default assign new users the free plan so we can easily
+  // inspect their subscription status later
   const response = await authFetch(`${url}/auth/v1/admin/users`, {
     method: "POST",
     headers: {
@@ -119,7 +128,7 @@ export async function createUserWithAdmin(
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: fullName },
+      user_metadata: { full_name: fullName, plan: "free" },
     }),
   });
 
@@ -217,4 +226,34 @@ export async function clearAuthSessionCookies(): Promise<void> {
 export async function getAccessTokenFromCookies(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(AUTH_ACCESS_COOKIE)?.value ?? null;
+}
+
+// update authenticated user's profile or password. the caller must supply a
+// valid access token (typically obtained via cookie).  the update object may
+// include `password` and/or `user_metadata` as documented by the Supabase
+// REST API.
+export async function updateUser(
+  accessToken: string,
+  updates: {
+    password?: string;
+    user_metadata?: Record<string, unknown>;
+  },
+): Promise<SupabaseAuthUserResponse> {
+  const { url, anonKey } = getSupabaseAuthEnv();
+
+  const response = await authFetch(`${url}/auth/v1/user`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: anonKey,
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseErrorMessage(response));
+  }
+
+  return (await response.json()) as SupabaseAuthUserResponse;
 }

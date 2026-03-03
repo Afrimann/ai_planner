@@ -17,7 +17,7 @@ interface ScheduledPostsApiResponse {
 }
 
 export interface ScheduledPostNotificationOptions {
-  userId: string;
+  userId?: string;
   posts?: ScheduledPostReminder[];
   fetchPosts?: () => Promise<ScheduledPostReminder[]>;
   overdueWindowMinutes?: number;
@@ -132,6 +132,23 @@ export async function ensureNotificationPermission(): Promise<
 
 function getNotifiedStorageKey(userId: string): string {
   return `post-reminder:notified:${userId}`;
+}
+
+function resolveNotificationUserId(
+  userId: string | undefined,
+  posts: ScheduledPostReminder[],
+): string {
+  if (userId && userId.trim()) {
+    return userId.trim();
+  }
+
+  for (const post of posts) {
+    if (typeof post.user_id === "string" && post.user_id.trim()) {
+      return post.user_id.trim();
+    }
+  }
+
+  return "current-user";
 }
 
 function readNotifiedMap(userId: string): Record<string, number> {
@@ -319,6 +336,7 @@ export async function checkScheduledPostsAndNotify(
   const sourcePosts =
     options.posts ??
     (await (options.fetchPosts ?? fetchScheduledPostsForCurrentUser)());
+  const notificationUserId = resolveNotificationUserId(options.userId, sourcePosts);
 
   const scheduledPosts = sourcePosts.filter(isScheduledCandidate);
   const duePosts = findDueScheduledPosts(scheduledPosts, now, overdueWindowMinutes);
@@ -350,7 +368,7 @@ export async function checkScheduledPostsAndNotify(
     };
   }
 
-  const notifiedMap = readNotifiedMap(options.userId);
+  const notifiedMap = readNotifiedMap(notificationUserId);
   const notifiedPostIds: string[] = [];
 
   for (const post of duePosts) {
@@ -374,7 +392,7 @@ export async function checkScheduledPostsAndNotify(
     notifiedPostIds.push(post.id);
   }
 
-  writeNotifiedMap(options.userId, notifiedMap);
+  writeNotifiedMap(notificationUserId, notifiedMap);
 
   return {
     ...baseResult,

@@ -27,7 +27,7 @@ export function PasswordToggle({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.96 }}
       className={cn(
-        "inline-flex h-8 min-w-14 items-center justify-center rounded-lg border border-zinc-600 bg-zinc-900 px-2 text-xs font-medium text-white transition-colors hover:border-zinc-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35",
+        "inline-flex mt-2 h-8 min-w-14 items-center justify-center rounded-lg border border-zinc-600 bg-zinc-900 px-2 text-xs font-medium text-white transition-colors hover:border-zinc-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35",
         className,
       )}
     >

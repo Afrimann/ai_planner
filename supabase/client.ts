@@ -25,7 +25,7 @@ interface SupabaseSignedUrlResponse {
   signedUrl?: string;
 }
 
-function getSupabaseEnv() {
+export function getSupabaseEnv() {
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   // Manual setup required in Supabase dashboard:
@@ -39,6 +39,14 @@ function getSupabaseEnv() {
   }
 
   const url = rawUrl.replace(/\/+$/, "");
+
+  // basic sanity check so we don't accidentally talk to ourselves
+  if (!url.includes("supabase.co")) {
+    console.warn(
+      "getSupabaseEnv: URL does not look like a Supabase endpoint",
+      url,
+    );
+  }
 
   return { url, serviceRoleKey, storageBucket };
 }
@@ -57,10 +65,7 @@ function parseErrorMessage(
     return "Supabase table public.ai_logs is missing in the connected project. Run supabase/schema.sql in your Supabase SQL editor (or apply migrations), then retry.";
   }
 
-  return (
-    rawMessage ||
-    `Supabase request failed (${status}).`
-  );
+  return rawMessage || `Supabase request failed (${status}).`;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -162,7 +167,10 @@ function extractObjectPathFromStorageUrl(
   }
 }
 
-function toAbsoluteStorageSignedUrl(baseUrl: string, signedUrl: string): string {
+function toAbsoluteStorageSignedUrl(
+  baseUrl: string,
+  signedUrl: string,
+): string {
   if (/^https?:\/\//i.test(signedUrl)) {
     return signedUrl;
   }
