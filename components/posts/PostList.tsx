@@ -6,7 +6,7 @@ import { ArrowUpDown, LayoutGrid, Table as TableIcon } from "lucide-react";
 
 import { PostCard } from "@/components/posts/PostCard";
 import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import type { Post } from "@/types";
 
 interface PostListProps {
