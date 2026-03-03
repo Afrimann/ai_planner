@@ -7,7 +7,7 @@ import { CalendarClock, Pencil, Send, Trash2, User } from "lucide-react";
 
 import { markPostAsPostedAction } from "@/app/posts/actions";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "../ui/Button";
+import { Button } from "@/components/ui/Button";
 import type { Post } from "@/types";
 import { cn } from "@/lib/utils";
 

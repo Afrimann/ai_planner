@@ -2,8 +2,8 @@
 
 import { useFormStatus } from "react-dom";
 
-import { Button } from "./Button";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 interface ConfirmDialogProps {
   open: boolean;
