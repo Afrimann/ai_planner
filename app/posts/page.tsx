@@ -5,10 +5,9 @@ import { PostForm } from "@/components/posts/PostForm";
 import { PostList } from "@/components/posts/PostList";
 import { Button } from "../../components/ui/Button";
 import { listPostsForAuthenticatedUser } from "@/lib/posts";
-import { warnPostManagementSupabaseSetup } from "@/lib/supabase-setup";
+// import { warnPostManagementSupabaseSetup } from "@/lib/supabase-setup";
 
 export default async function PostsPage() {
-  warnPostManagementSupabaseSetup();
 
   const posts = await listPostsForAuthenticatedUser();
   const upcomingCount = posts.filter((post) => {
