@@ -8,16 +8,9 @@ import { LandingHeader } from "@/components/LandingHeader";
 import { useCurrentUser } from "@/lib/use-current-user";
 
 const GLOBAL_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
   .nexus-btn {
-    background: linear-gradient(135deg, #7c5cfc 0%, #6d4fe0 100%) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    color: #fff !important;
-    font-family: 'Syne', sans-serif !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
+    @apply btn-primary !important;
     letter-spacing: 0.03em !important;
     padding: 12px 24px !important;
     cursor: pointer !important;
@@ -99,7 +92,7 @@ export default function CheckoutPage() {
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-syne font-bold text-white">Checkout</h1>
+          <h1 className="text-4xl font-Poppins font-bold text-white">Checkout</h1>
           <p className="mt-4 text-zinc-300">
             {info.name} plan ({info.price})
           </p>
@@ -136,3 +129,4 @@ export default function CheckoutPage() {
     </>
   );
 }
+

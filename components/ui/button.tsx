@@ -18,11 +18,11 @@ export interface ButtonProps extends Omit<
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-r from-[#38b000] to-[#2f9800] text-[#07110d] shadow-[0_8px_24px_-10px_rgba(56,176,0,0.8)] hover:from-[#66ff66] hover:to-[#38b000] focus-visible:ring-[#66ff66]/40",
+    "bg-black text-white border border-black hover:bg-gray-800 focus-visible:ring-black/20",
   secondary:
-    "border border-[#2c5f4f] bg-[#10221b] text-[#d8ffe4] hover:border-[#66ff66]/60 hover:bg-[#163126] focus-visible:ring-[#66ff66]/30",
+    "border border-gray-300 bg-white text-black hover:bg-gray-50 focus-visible:ring-gray-300/50",
   ghost:
-    "text-[#8de7a2] hover:bg-[#133026] hover:text-[#c9ffd7] focus-visible:ring-[#66ff66]/25",
+    "text-gray-700 hover:bg-gray-100 hover:text-black focus-visible:ring-gray-300/25",
 };
 
 export function Button({
@@ -37,16 +37,16 @@ export function Button({
 }: ButtonProps) {
   return (
     <motion.div
-      whileHover={{ y: -1.5, scale: 1.01 }}
-      whileTap={{ scale: 0.985 }}
-      transition={{ duration: 0.15 }}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.15, ease: "easeInOut" }}
       className={fullWidth ? "w-full" : "w-auto"}
     >
       <button
         type={type}
         disabled={disabled || loading}
         className={cn(
-          "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold",
+          "inline-flex h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium",
           "transition-all duration-200 outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-65",
           fullWidth ? "w-full" : "w-auto",
           variantStyles[variant],

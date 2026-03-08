@@ -1,5 +1,3 @@
-import { cache } from "react";
-
 import {
   deletePostByIdForUser,
   insertPost,
@@ -13,11 +11,17 @@ import type { CreatePostInput, Post, UpdatePostInput } from "@/types";
 import type { Database } from "@/supabase/database.types";
 import { requireAuthenticatedUserId } from "@/lib/auth";
 import { warnPostManagementSupabaseSetup } from "@/lib/supabase-setup";
+import { resolveActiveWorkspaceIdForUser } from "@/lib/workspace-context";
 
 // row type directly corresponds to the database's posts row.
 type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+interface PostScopeOptions {
+  workspaceId?: string | null;
+  includeAllScopes?: boolean;
+}
 
 function normalizePostId(id: string): string {
   return id.trim();
@@ -25,6 +29,27 @@ function normalizePostId(id: string): string {
 
 function isValidPostId(id: string): boolean {
   return uuidPattern.test(id);
+}
+
+function hasExplicitWorkspaceScope(
+  options?: PostScopeOptions,
+): options is PostScopeOptions & { workspaceId: string | null } {
+  return Boolean(options && Object.prototype.hasOwnProperty.call(options, "workspaceId"));
+}
+
+async function resolveWorkspaceScopeForUser(
+  userId: string,
+  options?: PostScopeOptions,
+): Promise<string | null | undefined> {
+  if (options?.includeAllScopes) {
+    return undefined;
+  }
+
+  if (hasExplicitWorkspaceScope(options)) {
+    return options.workspaceId ?? null;
+  }
+
+  return resolveActiveWorkspaceIdForUser(userId);
 }
 
 async function toPost(row: PostRow): Promise<Post> {
@@ -44,23 +69,25 @@ async function toPost(row: PostRow): Promise<Post> {
   } as Post;
 }
 
-export const listPostsForAuthenticatedUser = cache(
-  async (): Promise<Post[]> => {
-    const userId = await requireAuthenticatedUserId();
-    const rows = await selectPostsByUserId(userId);
-    return Promise.all(rows.map(toPost));
-  },
-);
+export async function listPostsForAuthenticatedUser(
+  options?: PostScopeOptions,
+): Promise<Post[]> {
+  const userId = await requireAuthenticatedUserId();
+  const workspaceScope = await resolveWorkspaceScopeForUser(userId, options);
+  const rows = await selectPostsByUserId(userId, workspaceScope);
+  return Promise.all(rows.map(toPost));
+}
 
-export const listTodayPosts = cache(async (): Promise<Post[]> => {
+export async function listTodayPosts(): Promise<Post[]> {
   const userId = await requireAuthenticatedUserId();
   const today = new Date().toISOString().slice(0, 10);
-  const rows = await selectPostsByUserId(userId);
+  const workspaceScope = await resolveWorkspaceScopeForUser(userId);
+  const rows = await selectPostsByUserId(userId, workspaceScope);
   const filteredRows = rows.filter((row) => row.scheduled_date === today);
   return Promise.all(filteredRows.map(toPost));
-});
+}
 
-export const listUpcomingPosts = cache(async (): Promise<Post[]> => {
+export async function listUpcomingPosts(): Promise<Post[]> {
   const userId = await requireAuthenticatedUserId();
   const start = new Date();
   start.setDate(start.getDate() + 1);
@@ -71,7 +98,8 @@ export const listUpcomingPosts = cache(async (): Promise<Post[]> => {
   const startDate = start.toISOString().slice(0, 10);
   const endDate = end.toISOString().slice(0, 10);
 
-  const rows = await selectPostsByUserId(userId);
+  const workspaceScope = await resolveWorkspaceScopeForUser(userId);
+  const rows = await selectPostsByUserId(userId, workspaceScope);
 
   const filteredRows = rows.filter((row) => {
     if (!row.scheduled_date) {
@@ -82,23 +110,42 @@ export const listUpcomingPosts = cache(async (): Promise<Post[]> => {
   });
 
   return Promise.all(filteredRows.map(toPost));
-});
+}
 
-export async function getPostById(id: string): Promise<Post | null> {
+export async function getPostById(
+  id: string,
+  options?: PostScopeOptions,
+): Promise<Post | null> {
   const postId = normalizePostId(id);
   if (!isValidPostId(postId)) {
     return null;
   }
 
   const userId = await requireAuthenticatedUserId();
-  const row = await selectPostByIdForUser(postId, userId);
+  const workspaceScope = await resolveWorkspaceScopeForUser(userId, options);
+  const row = await selectPostByIdForUser(postId, userId, workspaceScope);
   return row ? toPost(row) : null;
 }
 
-export async function createPost(input: CreatePostInput): Promise<void> {
+export async function createPost(
+  input: CreatePostInput,
+  options?: PostScopeOptions,
+): Promise<string> {
   warnPostManagementSupabaseSetup();
 
   const userId = await requireAuthenticatedUserId();
+  const explicitWorkspaceId =
+    typeof input.workspace_id === "string"
+      ? (input.workspace_id.trim() || null)
+      : undefined;
+  const scopeOptions =
+    explicitWorkspaceId === undefined
+      ? options
+      : {
+          ...(options ?? {}),
+          workspaceId: explicitWorkspaceId,
+        };
+  const workspaceScope = await resolveWorkspaceScopeForUser(userId, scopeOptions);
   let imageUrl: string | null = null;
 
   if (input.imageFile) {
@@ -107,8 +154,9 @@ export async function createPost(input: CreatePostInput): Promise<void> {
     imageUrl = input.image_url;
   }
 
-  await insertPost({
+  const created = await insertPost({
     user_id: userId,
+    workspace_id: workspaceScope ?? null,
     platform: input.platform,
     title: input.title || "",
     caption: input.caption,
@@ -119,22 +167,39 @@ export async function createPost(input: CreatePostInput): Promise<void> {
     scheduled_time: input.scheduled_time ?? null,
     published: input.status === "posted",
   });
+
+  return created.id;
 }
 
-export async function updatePost(input: UpdatePostInput): Promise<void> {
+export async function updatePost(
+  input: UpdatePostInput,
+  options?: PostScopeOptions,
+): Promise<void> {
   const postId = normalizePostId(input.id);
   if (!isValidPostId(postId)) {
     throw new Error("Invalid post id.");
   }
 
   const userId = await requireAuthenticatedUserId();
+  const explicitWorkspaceId =
+    typeof input.workspace_id === "string"
+      ? (input.workspace_id.trim() || null)
+      : undefined;
+  const scopeOptions =
+    explicitWorkspaceId === undefined
+      ? options
+      : {
+          ...(options ?? {}),
+          workspaceId: explicitWorkspaceId,
+        };
+  const workspaceScope = await resolveWorkspaceScopeForUser(userId, scopeOptions);
   let imageUrl = input.image_url ?? null;
 
   if (input.imageFile) {
     imageUrl = await uploadPostImage(userId, input.imageFile);
   }
 
-  await updatePostByIdForUser(postId, userId, {
+  await updatePostByIdForUser(postId, userId, workspaceScope, {
     platform: input.platform,
     title: input.title,
     caption: input.caption,
@@ -151,6 +216,7 @@ export async function updatePost(input: UpdatePostInput): Promise<void> {
 export async function setPostStatus(
   id: string,
   status: Post["status"],
+  options?: PostScopeOptions,
 ): Promise<void> {
   const postId = normalizePostId(id);
   if (!isValidPostId(postId)) {
@@ -158,26 +224,31 @@ export async function setPostStatus(
   }
 
   const userId = await requireAuthenticatedUserId();
+  const workspaceScope = await resolveWorkspaceScopeForUser(userId, options);
 
-  await updatePostByIdForUser(postId, userId, {
+  await updatePostByIdForUser(postId, userId, workspaceScope, {
     status,
     published: status === "posted",
     updated_at: new Date().toISOString(),
   });
 }
 
-export async function deletePost(id: string): Promise<void> {
+export async function deletePost(
+  id: string,
+  options?: PostScopeOptions,
+): Promise<void> {
   const postId = normalizePostId(id);
   if (!isValidPostId(postId)) {
     throw new Error("Invalid post id.");
   }
 
   const userId = await requireAuthenticatedUserId();
-  const existingPost = await selectPostByIdForUser(postId, userId);
+  const workspaceScope = await resolveWorkspaceScopeForUser(userId, options);
+  const existingPost = await selectPostByIdForUser(postId, userId, workspaceScope);
 
   if (!existingPost) {
     throw new Error("Post not found or access denied.");
   }
 
-  await deletePostByIdForUser(postId, userId);
+  await deletePostByIdForUser(postId, userId, workspaceScope);
 }

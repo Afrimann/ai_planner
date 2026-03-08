@@ -10,6 +10,7 @@ import {
   sendPasswordResetEmail,
   updateUser,
 } from "@/lib/supabase-auth";
+import { acceptPendingWorkspaceInvitationsForUser } from "@/lib/workspaces";
 import { getSupabaseEnv } from "@/supabase/client";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -116,6 +117,11 @@ export async function signUpAction(
     // create user with default free plan in metadata
     await createUserWithAdmin(fullName, email, password);
     const session = await exchangePasswordForSession(email, password);
+    try {
+      await acceptPendingWorkspaceInvitationsForUser(session.user.id, email);
+    } catch (error) {
+      console.warn("Failed to auto-accept pending workspace invitations.", error);
+    }
     await persistAuthSessionCookies(session);
   } catch (error) {
     const message =
@@ -163,6 +169,11 @@ export async function signInAction(
 
   try {
     const session = await exchangePasswordForSession(email, password);
+    try {
+      await acceptPendingWorkspaceInvitationsForUser(session.user.id, email);
+    } catch (error) {
+      console.warn("Failed to auto-accept pending workspace invitations.", error);
+    }
     // ensure metadata.plan exists (some older accounts may lack it)
     if (!session.user.user_metadata?.plan) {
       // rather than patching with the limited access token (which was

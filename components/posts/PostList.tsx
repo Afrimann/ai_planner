@@ -13,118 +13,183 @@ interface PostListProps {
 }
 
 const LIST_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap');
-
   .nexus-list-search label,
   .nexus-list-search [data-slot="label"],
   .nexus-list-search [class*="label"],
   .nexus-list-search [class*="Label"] {
-    color: #d4cfee !important;
-    font-family: 'DM Sans', sans-serif !important;
+    color: hsl(var(--muted-foreground)) !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 12px !important;
     font-weight: 500 !important;
     letter-spacing: 0.04em !important;
     text-transform: uppercase !important;
   }
+
   .nexus-list-search input {
-    background: #05050d !important;
-    color: #eeeaf8 !important;
-    -webkit-text-fill-color: #eeeaf8 !important;
-    border: 1px solid rgba(124,92,252,0.22) !important;
+    background: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    border: 1px solid hsl(var(--border)) !important;
     border-radius: 12px !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 13.5px !important;
     outline: none !important;
     transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
   }
+
   .nexus-list-search input:focus {
-    border-color: rgba(124,92,252,0.6) !important;
-    box-shadow: 0 0 0 3px rgba(124,92,252,0.12) !important;
+    border-color: hsl(var(--foreground) / 0.5) !important;
+    box-shadow: 0 0 0 3px hsl(var(--foreground) / 0.08) !important;
   }
+
   .nexus-list-search input::placeholder {
-    color: #3e3a5e !important;
-    -webkit-text-fill-color: #3e3a5e !important;
+    color: hsl(var(--muted-foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--muted-foreground)) !important;
     opacity: 1 !important;
   }
 
-  /* View toggle buttons */
   .nexus-view-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 14px; border-radius: 9px;
-    font-size: 12.5px; font-weight: 500; font-family: 'DM Sans', sans-serif;
-    cursor: pointer; border: 1px solid rgba(124,92,252,0.15);
-    background: transparent; color: #6b6890;
-    transition: all 0.15s ease; outline: none; white-space: nowrap;
-  }
-  .nexus-view-btn:hover, .nexus-view-btn.active {
-    background: rgba(124,92,252,0.12);
-    color: #c4b5fd;
-    border-color: rgba(124,92,252,0.35);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+    color: hsl(var(--muted-foreground));
+    transition: all 0.15s ease;
+    outline: none;
+    white-space: nowrap;
   }
 
-  /* Table */
+  .nexus-view-btn:hover,
+  .nexus-view-btn.active {
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+    border-color: hsl(var(--foreground));
+  }
+
+  .nexus-table-wrap {
+    border-radius: 14px;
+    overflow: hidden;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .nexus-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .nexus-table {
-    width: 100%; border-collapse: collapse;
-    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+    min-width: 580px;
+    border-collapse: collapse;
+    font-family: 'Poppins', sans-serif;
   }
+
   .nexus-table thead tr {
-    border-bottom: 1px solid rgba(124,92,252,0.15);
+    border-bottom: 1px solid hsl(var(--border));
   }
+
   .nexus-table thead th {
     padding: 12px 16px;
     text-align: left;
-    font-size: 10px; font-weight: 600;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: #4b4870;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+    white-space: nowrap;
   }
+
   .nexus-table tbody tr {
-    border-bottom: 1px solid rgba(124,92,252,0.08);
+    border-bottom: 1px solid hsl(var(--border));
     transition: background 0.12s ease;
   }
-  .nexus-table tbody tr:hover { background: rgba(124,92,252,0.05); }
+
+  .nexus-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .nexus-table tbody tr:hover {
+    background: hsl(var(--muted) / 0.65);
+  }
+
   .nexus-table tbody td {
     padding: 13px 16px;
     font-size: 13px;
   }
-  .nexus-table .td-title { color: #eeeaf8; font-weight: 500; }
-  .nexus-table .td-meta { color: #7a7499; text-transform: capitalize; }
 
-  /* Status badge */
-  .nexus-status-badge {
-    display: inline-block;
-    padding: 2px 9px; border-radius: 99px;
-    font-size: 11px; font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
+  .nexus-table .td-title {
+    color: hsl(var(--foreground));
+    font-weight: 500;
+  }
+
+  .nexus-table .td-meta {
+    color: hsl(var(--muted-foreground));
     text-transform: capitalize;
   }
+
+  .nexus-status-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    text-transform: capitalize;
+    border: 1px solid hsl(var(--border));
+    white-space: nowrap;
+  }
+
   .nexus-status-badge.draft {
-    background: rgba(124,92,252,0.1); color: #a78bfa;
-    border: 1px solid rgba(124,92,252,0.25);
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground));
   }
+
   .nexus-status-badge.planned {
-    background: rgba(77,255,210,0.08); color: #4dffd2;
-    border: 1px solid rgba(77,255,210,0.2);
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--foreground) / 0.3);
   }
+
   .nexus-status-badge.posted {
-    background: rgba(52,211,153,0.1); color: #6ee7b7;
-    border: 1px solid rgba(52,211,153,0.2);
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+    border-color: hsl(var(--foreground));
+  }
+
+  @media (max-width: 640px) {
+    .nexus-table {
+      min-width: 520px;
+    }
+
+    .nexus-table thead th,
+    .nexus-table tbody td {
+      padding: 10px 12px;
+      font-size: 12px;
+    }
   }
 `;
 
 function StatusBadge({ status }: { status: string }) {
-  return (
-    <span className={`nexus-status-badge ${status}`}>{status}</span>
-  );
+  return <span className={`nexus-status-badge ${status}`}>{status}</span>;
 }
 
 export function PostList({ posts }: PostListProps) {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
-  // ── ALL LOGIC UNTOUCHED ──
   const filtered = useMemo(() => {
     return posts.filter((post) =>
-      `${post.title ?? ""} ${post.caption}`.toLowerCase().includes(search.toLowerCase()),
+      `${post.title ?? ""} ${post.caption}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
     );
   }, [posts, search]);
 
@@ -132,30 +197,28 @@ export function PostList({ posts }: PostListProps) {
     <>
       <style dangerouslySetInnerHTML={{ __html: LIST_STYLES }} />
 
-      <section style={{ display: "flex", flexDirection: "column", gap: 20 }} id="post-list">
-
+      <section
+        className="flex flex-col gap-4 sm:gap-5"
+        id="post-list"
+      >
         {/* Toolbar */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{
-            display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 12,
-            borderRadius: 14, padding: "18px 20px",
-            background: "#0f0f1e",
-            border: "1px solid rgba(124,92,252,0.15)",
-          }}
+          className="flex flex-col items-stretch gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4 sm:p-5"
         >
-          <div style={{ flex: 1, minWidth: 220 }} className="nexus-list-search">
+          <div className="nexus-list-search min-w-0 flex-1 sm:min-w-[260px]">
             <Input
               label="Search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder="Search posts..."
             />
           </div>
 
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <button
+              type="button"
               className={`nexus-view-btn${viewMode === "cards" ? " active" : ""}`}
               onClick={() => setViewMode("cards")}
             >
@@ -163,6 +226,7 @@ export function PostList({ posts }: PostListProps) {
               Cards
             </button>
             <button
+              type="button"
               className={`nexus-view-btn${viewMode === "table" ? " active" : ""}`}
               onClick={() => setViewMode("table")}
             >
@@ -174,48 +238,48 @@ export function PostList({ posts }: PostListProps) {
 
         {/* Empty state */}
         {filtered.length === 0 ? (
-          <div style={{
-            borderRadius: 14, padding: "32px 20px",
-            background: "#0f0f1e",
-            border: "1px dashed rgba(124,92,252,0.2)",
-            textAlign: "center",
-          }}>
-            <p style={{ margin: 0, fontSize: 13, color: "#4b4870", fontFamily: "'DM Sans', sans-serif" }}>
+          <div className="rounded-xl border border-dashed border-border bg-card px-4 py-8 text-center sm:px-5">
+            <p
+              style={{
+                margin: 0,
+                fontSize: 13,
+                color: "hsl(var(--muted-foreground))",
+                fontFamily: "Poppins, sans-serif",
+              }}
+            >
               No posts found.
             </p>
           </div>
         ) : viewMode === "cards" ? (
-          /* Cards grid — LOGIC UNTOUCHED */
-          <div style={{ display: "grid", gap: 20 }} className="sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-5 xl:grid-cols-3">
             {filtered.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
           </div>
         ) : (
-          /* Table — LOGIC UNTOUCHED */
-          <div style={{
-            borderRadius: 14, overflow: "hidden",
-            background: "#0f0f1e",
-            border: "1px solid rgba(124,92,252,0.15)",
-          }}>
-            <table className="nexus-table">
-              <thead>
-                <tr>
-                  <th>Post</th>
-                  <th>Status</th>
-                  <th>Platform</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((post) => (
-                  <tr key={post.id}>
-                    <td className="td-title">{post.title || "Untitled"}</td>
-                    <td><StatusBadge status={post.status} /></td>
-                    <td className="td-meta">{post.platform}</td>
+          <div className="nexus-table-wrap">
+            <div className="nexus-table-scroll">
+              <table className="nexus-table">
+                <thead>
+                  <tr>
+                    <th>Post</th>
+                    <th>Status</th>
+                    <th>Platform</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filtered.map((post) => (
+                    <tr key={post.id}>
+                      <td className="td-title">{post.title || "Untitled"}</td>
+                      <td>
+                        <StatusBadge status={post.status} />
+                      </td>
+                      <td className="td-meta">{post.platform}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </section>

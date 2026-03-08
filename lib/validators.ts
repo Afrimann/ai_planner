@@ -130,6 +130,7 @@ function validateScheduling(
 }
 
 export function parseCreatePostInput(formData: FormData): CreatePostInput {
+  const workspace_id = readOptionalString(formData, "workspaceId");
   const platform = parsePlatform(readRequiredString(formData, "platform"));
   const caption = readRequiredString(formData, "caption");
   const status = parseStatus(readRequiredString(formData, "status"));
@@ -152,6 +153,7 @@ export function parseCreatePostInput(formData: FormData): CreatePostInput {
   validateScheduling(status, scheduled_date, scheduled_time);
 
   return {
+    workspace_id,
     platform,
     caption,
     status,

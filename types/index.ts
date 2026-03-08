@@ -23,6 +23,7 @@ export type PostStatus = "draft" | "planned" | "posted";
 export interface Post {
   id: ID;
   user_id: string;
+  workspace_id: string | null;
   platform: PostPlatform;
   title?: string;
   caption: string;
@@ -37,6 +38,7 @@ export interface Post {
 }
 
 export interface CreatePostInput {
+  workspace_id?: string | null;
   platform: PostPlatform;
   title?: string;
   caption: string;
@@ -49,6 +51,7 @@ export interface CreatePostInput {
 
 export interface UpdatePostInput {
   id: ID;
+  workspace_id?: string | null;
   platform: PostPlatform;
   title?: string;
   caption: string;

@@ -28,14 +28,14 @@ export function LandingHeader() {
       <>
         <Link
           href="/auth/signin"
-          className="hover:text-white transition-colors"
+          className="hover:text-black transition-colors"
           onClick={closeMenu}
         >
           Sign In
         </Link>
         <Link
           href="/auth/signup"
-          className="ml-4 px-4 py-2 bg-gradient-to-r from-[#7c5cfc] to-[#f471b5] rounded-lg text-white font-semibold"
+          className="ml-4 px-4 py-2 bg-black rounded-lg text-white font-medium text-sm hover:bg-gray-800 transition-colors"
           onClick={closeMenu}
         >
           Get Started
@@ -45,38 +45,38 @@ export function LandingHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-sm bg-[#07070f]/70 border-b border-zinc-800">
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="font-syne text-xl font-extrabold text-white tracking-tight">
+          <span className="font-display text-xl font-bold text-black tracking-tight">
             Nexus
           </span>
-          <span className="font-dm text-xs text-zinc-400 uppercase">
+          <span className="font-sans text-xs text-gray-500 uppercase">
             AI Planner
           </span>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-6 text-sm text-zinc-200">
-          <Link href="/" className="hover:text-white transition-colors">
+        <nav className="hidden md:flex items-center space-x-6 text-sm text-gray-700">
+          <Link href="/" className="hover:text-black transition-colors">
             Home
           </Link>
           <Link
             href="/#features"
-            className="hover:text-white transition-colors"
+            className="hover:text-black transition-colors"
           >
             Features
           </Link>
-          <Link href="/pricing" className="hover:text-white transition-colors">
+          <Link href="/pricing" className="hover:text-black transition-colors">
             Pricing
           </Link>
-          <Link href="/#about" className="hover:text-white transition-colors">
+          <Link href="/#about" className="hover:text-black transition-colors">
             About
           </Link>
           {renderAuthLinks()}
         </nav>
 
         <button
-          className="md:hidden p-2 text-zinc-200"
+          className="md:hidden p-2 text-gray-700"
           onClick={() => setMobileOpen((o) => !o)}
           aria-label="Toggle menu"
         >
@@ -119,9 +119,9 @@ export function LandingHeader() {
         <motion.nav
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: "auto", opacity: 1 }}
-          className="md:hidden bg-[#07070f]/90 border-t border-zinc-800"
+          className="md:hidden bg-white border-t border-gray-200"
         >
-          <div className="px-4 pt-2 pb-4 flex flex-col space-y-2 text-sm text-zinc-200">
+          <div className="px-4 pt-2 pb-4 flex flex-col space-y-2 text-sm text-gray-700">
             <Link href="/" onClick={() => setMobileOpen(false)}>
               Home
             </Link>

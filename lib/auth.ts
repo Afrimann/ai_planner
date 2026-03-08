@@ -5,8 +5,12 @@ import { redirect } from "next/navigation";
 
 import {
   AUTH_ACCESS_COOKIE,
+  clearAuthSessionCookies,
+  exchangeRefreshTokenForSession,
   getAccessTokenFromCookies,
+  getRefreshTokenFromCookies,
   getAuthenticatedUserFromToken,
+  persistAuthSessionCookies,
 } from "@/lib/supabase-auth";
 
 export interface AuthenticatedUser {
@@ -14,6 +18,12 @@ export interface AuthenticatedUser {
   email?: string;
   fullName?: string;
   metadata?: Record<string, unknown>;
+}
+
+interface SupabaseUserLike {
+  id: string;
+  email?: string;
+  user_metadata?: Record<string, unknown>;
 }
 
 function extractBearerToken(value: string | null): string {
@@ -32,6 +42,10 @@ async function getUserFromTokenOrThrow(
     throw new Error("Unauthorized");
   }
 
+  return mapSupabaseUser(user);
+}
+
+function mapSupabaseUser(user: SupabaseUserLike): AuthenticatedUser {
   // pull full name if it's stored in user_metadata.full_name
   const fullName =
     typeof user.user_metadata?.full_name === "string"
@@ -44,6 +58,29 @@ async function getUserFromTokenOrThrow(
     fullName,
     metadata: user.user_metadata,
   };
+}
+
+async function tryRefreshAuthenticatedUserFromCookies(): Promise<AuthenticatedUser | null> {
+  const refreshToken = await getRefreshTokenFromCookies();
+
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+    const session = await exchangeRefreshTokenForSession(refreshToken);
+
+    if (!session.user?.id) {
+      await clearAuthSessionCookies();
+      return null;
+    }
+
+    await persistAuthSessionCookies(session);
+    return mapSupabaseUser(session.user);
+  } catch {
+    await clearAuthSessionCookies();
+    return null;
+  }
 }
 
 export async function requireAuthenticatedUser(
@@ -68,11 +105,20 @@ export async function requireAuthenticatedUser(
     }
   }
 
-  if (!token) {
-    throw new Error("Unauthorized");
+  if (token) {
+    try {
+      return await getUserFromTokenOrThrow(token);
+    } catch {
+      // Continue into refresh fallback below.
+    }
   }
 
-  return getUserFromTokenOrThrow(token);
+  const refreshedUser = await tryRefreshAuthenticatedUserFromCookies();
+  if (refreshedUser) {
+    return refreshedUser;
+  }
+
+  throw new Error("Unauthorized");
 }
 
 export async function getCurrentAuthenticatedUser(): Promise<AuthenticatedUser | null> {

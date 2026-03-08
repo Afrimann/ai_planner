@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { createActivity } from "@/lib/activities";
 import { requireAuthenticatedUserId } from "@/lib/auth";
 import { rewriteCaption } from "@/lib/ai/service";
 import { createPost, deletePost, setPostStatus, updatePost } from "@/lib/posts";
 import { warnPostManagementSupabaseSetup } from "@/lib/supabase-setup";
 import { parseCreatePostInput, parseUpdatePostInput } from "@/lib/validators";
+import { resolveActiveWorkspaceIdForUser } from "@/lib/workspace-context";
 import { insertAILog } from "@/supabase/client";
 
 type CreateState = {
@@ -65,12 +67,70 @@ function mapCreateError(error: unknown): CreateState {
   };
 }
 
+async function logPostStatusActivity(input: {
+  userId: string;
+  workspaceId: string | null;
+  postId: string;
+  status: "draft" | "planned" | "posted";
+  scheduledDate?: string;
+  scheduledTime?: string;
+}): Promise<void> {
+  if (input.status === "planned") {
+    await createActivity({
+      actorId: input.userId,
+      workspaceId: input.workspaceId,
+      action: "post_scheduled",
+      entityType: "post",
+      entityId: input.postId,
+      metadata: {
+        scheduled_date: input.scheduledDate ?? null,
+        scheduled_time: input.scheduledTime ?? null,
+      },
+    });
+    return;
+  }
+
+  if (input.status === "posted") {
+    await createActivity({
+      actorId: input.userId,
+      workspaceId: input.workspaceId,
+      action: "post_published",
+      entityType: "post",
+      entityId: input.postId,
+      metadata: {},
+    });
+  }
+}
+
 export async function createPostAction(formData: FormData): Promise<void> {
   warnPostManagementSupabaseSetup();
 
   try {
     const input = parseCreatePostInput(formData);
-    await createPost(input);
+    const postId = await createPost(input);
+    const userId = await requireAuthenticatedUserId();
+    const workspaceId = await resolveActiveWorkspaceIdForUser(userId);
+
+    await createActivity({
+      actorId: userId,
+      workspaceId,
+      action: "post_created",
+      entityType: "post",
+      entityId: postId,
+      metadata: {
+        platform: input.platform,
+        status: input.status,
+      },
+    });
+    await logPostStatusActivity({
+      userId,
+      workspaceId,
+      postId,
+      status: input.status,
+      scheduledDate: input.scheduled_date,
+      scheduledTime: input.scheduled_time,
+    });
+
     revalidatePath("/posts");
     revalidatePath("/dashboard");
     revalidatePath("/calendar");
@@ -89,7 +149,29 @@ export async function createManagedPostAction(
 
   try {
     const input = parseCreatePostInput(formData);
-    await createPost(input);
+    const postId = await createPost(input);
+    const userId = await requireAuthenticatedUserId();
+    const workspaceId = await resolveActiveWorkspaceIdForUser(userId);
+
+    await createActivity({
+      actorId: userId,
+      workspaceId,
+      action: "post_created",
+      entityType: "post",
+      entityId: postId,
+      metadata: {
+        platform: input.platform,
+        status: input.status,
+      },
+    });
+    await logPostStatusActivity({
+      userId,
+      workspaceId,
+      postId,
+      status: input.status,
+      scheduledDate: input.scheduled_date,
+      scheduledTime: input.scheduled_time,
+    });
   } catch (error) {
     return mapCreateError(error);
   }
@@ -129,10 +211,12 @@ export async function generateCaptionForPostAction(
 
   try {
     const userId = await requireAuthenticatedUserId();
+    const workspaceId = await resolveActiveWorkspaceIdForUser(userId);
     const generatedCaption = await rewriteCaption(prompt);
 
     await insertAILog({
       user_id: userId,
+      workspace_id: workspaceId,
       action: "rewrite_caption",
       input_text: prompt,
       output_text: generatedCaption,
@@ -192,6 +276,16 @@ export async function markPostAsPostedAction(formData: FormData): Promise<void> 
 
   try {
     await setPostStatus(id, "posted");
+    const userId = await requireAuthenticatedUserId();
+    const workspaceId = await resolveActiveWorkspaceIdForUser(userId);
+    await createActivity({
+      actorId: userId,
+      workspaceId,
+      action: "post_published",
+      entityType: "post",
+      entityId: id,
+      metadata: {},
+    });
   } catch (error) {
     throw new Error(toActionErrorMessage(error));
   }
@@ -214,6 +308,14 @@ export async function changePostStatusAction(formData: FormData): Promise<void> 
 
   try {
     await setPostStatus(id, status);
+    const userId = await requireAuthenticatedUserId();
+    const workspaceId = await resolveActiveWorkspaceIdForUser(userId);
+    await logPostStatusActivity({
+      userId,
+      workspaceId,
+      postId: id,
+      status,
+    });
   } catch (error) {
     throw new Error(toActionErrorMessage(error));
   }

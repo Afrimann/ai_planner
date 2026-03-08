@@ -49,21 +49,12 @@ export default function SettingsClient({
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
         /* ===== Metric Card System ===== */
 
         .nexus-metric-card {
-          position: relative;
-          border-radius: 16px;
-          padding: 1px;
-          background: linear-gradient(
-            135deg,
-            rgba(124,92,252,0.35) 0%,
-            rgba(244,113,181,0.12) 50%,
-            rgba(124,92,252,0.08) 100%
-          );
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          @apply card;
+          transition: transform 0.2s ease;
         }
 
         .nexus-metric-card:hover {
@@ -72,39 +63,9 @@ export default function SettingsClient({
         }
 
         .nexus-metric-inner {
-          border-radius: 15px;
           padding: 24px;
-          background: #0f0f1e;
           position: relative;
           overflow: hidden;
-        }
-
-        .nexus-metric-inner::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          height: 1px;
-          width: 60%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(124,92,252,0.5),
-            transparent
-          );
-        }
-
-        .nexus-metric-glow {
-          position: absolute;
-          bottom: -20px;
-          right: -20px;
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          background: rgba(124,92,252,0.08);
-          filter: blur(20px);
-          pointer-events: none;
         }
 
         /* ===== Force All Labels To Nexus Color ===== */
@@ -114,8 +75,8 @@ export default function SettingsClient({
         .nexus-metric-inner .label,
         .nexus-metric-inner [class*="label"],
         .nexus-metric-inner [class*="Label"] {
-          color: #d4cfee !important;
-          font-family: 'DM Sans', sans-serif !important;
+          color: hsl(var(--foreground)) !important;
+          font-family: 'Poppins', sans-serif !important;
           font-size: 13px !important;
           font-weight: 500 !important;
           letter-spacing: 0.02em !important;
@@ -124,11 +85,11 @@ export default function SettingsClient({
         /* ===== Input Styling ===== */
 
         .nexus-input-wrapper input {
-          background-color: #0f0f1e !important;
-          color: #eeeaf8 !important;
+          background-color: hsl(var(--input)) !important;
+          color: hsl(var(--foreground)) !important;
           border: 1px solid rgba(124,92,252,0.25) !important;
           border-radius: 12px !important;
-          font-family: 'DM Sans', sans-serif !important;
+          font-family: 'Poppins', sans-serif !important;
           font-size: 14px !important;
           transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
         }
@@ -146,7 +107,7 @@ export default function SettingsClient({
           border: none;
           border-radius: 12px;
           color: #fff;
-          font-family: 'Syne', sans-serif;
+          font-family: 'Poppins', sans-serif;
           font-size: 14px;
           font-weight: 600;
           letter-spacing: 0.03em;
@@ -177,7 +138,7 @@ export default function SettingsClient({
           display: "flex",
           flexDirection: "column",
           gap: 32,
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "'Poppins', sans-serif",
         }}
       >
         {/* ===== Header ===== */}
@@ -190,7 +151,7 @@ export default function SettingsClient({
               fontWeight: 500,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "#7c5cfc",
+              color: "hsl(var(--muted-foreground))",
             }}
           >
             Account
@@ -199,10 +160,10 @@ export default function SettingsClient({
           <h1
             style={{
               margin: 0,
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Poppins', sans-serif",
               fontSize: 28,
               fontWeight: 800,
-              color: "#eeeaf8",
+              color: "hsl(var(--foreground))",
               letterSpacing: "-0.03em",
             }}
           >
@@ -213,21 +174,12 @@ export default function SettingsClient({
             style={{
               margin: 0,
               fontSize: 14,
-              color: "#7a7499",
-              fontWeight: 300,
+              color: "hsl(var(--muted-foreground))",
+              fontWeight: 400,
             }}
           >
             Manage your account details and security.
           </p>
-
-          <div
-            style={{
-              marginTop: 8,
-              height: 1,
-              background:
-                "linear-gradient(90deg, rgba(124,92,252,0.3), rgba(244,113,181,0.1), transparent)",
-            }}
-          />
         </header>
 
         {/* ===== Plan Card ===== */}
@@ -241,7 +193,7 @@ export default function SettingsClient({
                   : "free"}
               </strong>
             </p>
-            <Link href="/pricing" className="nexus-btn text-sm">
+            <Link href="/pricing" className="btn-primary text-sm">
               Change plan
             </Link>
           </div>
@@ -251,14 +203,12 @@ export default function SettingsClient({
 
         <div className="nexus-metric-card">
           <div className="nexus-metric-inner">
-            <div className="nexus-metric-glow" />
-
             <h2
               style={{
-                fontFamily: "'Syne', sans-serif",
+                fontFamily: "'Poppins', sans-serif",
                 fontSize: 20,
                 fontWeight: 700,
-                color: "#eeeaf8",
+                color: "hsl(var(--foreground))",
                 marginBottom: 20,
               }}
             >
@@ -311,14 +261,12 @@ export default function SettingsClient({
 
         <div className="nexus-metric-card">
           <div className="nexus-metric-inner">
-            <div className="nexus-metric-glow" />
-
             <h2
               style={{
-                fontFamily: "'Syne', sans-serif",
+                fontFamily: "'Poppins', sans-serif",
                 fontSize: 20,
                 fontWeight: 700,
-                color: "#eeeaf8",
+                color: "hsl(var(--foreground))",
                 marginBottom: 20,
               }}
             >
@@ -387,3 +335,4 @@ export default function SettingsClient({
     </>
   );
 }
+
