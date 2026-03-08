@@ -14,17 +14,12 @@ export default function MainContent({ children }: MainContentProps) {
     <AnimatePresence mode="wait" initial={false}>
       <motion.main
         key={pathname}
-        initial={{ opacity: 0, x: 10 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -10 }}
-        transition={{ duration: 0.2 }}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          background: "#07070f",
-          color: "#eeeaf8",
-          minHeight: 0,
-        }}
+        initial={{ opacity: 0, y: 8, scale: 0.995 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -6, scale: 0.995 }}
+        transition={{ duration: 0.28, ease: "easeOut" }}
+        className="flex-1 overflow-y-auto bg-background text-foreground min-h-0"
+        style={{ willChange: "opacity, transform" }}
       >
         {children}
       </motion.main>

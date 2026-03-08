@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       serviceRoleKeyPresent: Boolean(serviceRoleKey),
     });
     const adminRes = await fetch(`${url}/auth/v1/admin/users/${user.id}`, {
-      method: "PATCH",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         apikey: serviceRoleKey,

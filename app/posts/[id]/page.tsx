@@ -20,28 +20,21 @@ export default async function PostDetailPage({ params }: PostPageProps) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
         .nexus-breadcrumb a {
-          color: #6b6890; text-decoration: none;
-          font-family: 'DM Sans', sans-serif; font-size: 12px;
+          color: hsl(var(--muted-foreground)); text-decoration: none;
+          font-family: 'Poppins', sans-serif; font-size: 12px;
           transition: color 0.15s ease;
         }
-        .nexus-breadcrumb a:hover { color: #a78bfa; }
+        .nexus-breadcrumb a:hover { color: hsl(var(--foreground)); }
         .nexus-breadcrumb span {
-          color: #c4b5fd; font-family: 'DM Sans', sans-serif;
+          color: hsl(var(--foreground)); font-family: 'Poppins', sans-serif;
           font-size: 12px; font-weight: 500;
         }
       `}</style>
 
       <section
-        style={{
-          padding: "32px 28px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 28,
-          fontFamily: "'DM Sans', sans-serif",
-          minHeight: "100%",
-        }}
+        className="flex min-h-full flex-col gap-6 px-4 py-6 sm:gap-7 sm:px-6 sm:py-8"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
       >
         {/* Breadcrumb — LOGIC UNTOUCHED */}
         <nav
@@ -51,63 +44,35 @@ export default async function PostDetailPage({ params }: PostPageProps) {
         >
           <Link href="/dashboard">Dashboard</Link>
           <ChevronRight
-            style={{ width: 13, height: 13, color: "#3d3960", flexShrink: 0 }}
+            style={{
+              width: 13,
+              height: 13,
+              color: "hsl(var(--muted-foreground))",
+              flexShrink: 0,
+            }}
           />
           <Link href="/posts">Posts</Link>
           <ChevronRight
-            style={{ width: 13, height: 13, color: "#3d3960", flexShrink: 0 }}
+            style={{
+              width: 13,
+              height: 13,
+              color: "hsl(var(--muted-foreground))",
+              flexShrink: 0,
+            }}
           />
           <span>Edit</span>
         </nav>
 
         {/* Header card */}
-        <header
-          style={{
-            borderRadius: 18,
-            padding: 1,
-            background:
-              "linear-gradient(135deg, rgba(124,92,252,0.4) 0%, rgba(244,113,181,0.18) 50%, rgba(124,92,252,0.08) 100%)",
-          }}
-        >
+        <header className="card">
           <div
             style={{
-              borderRadius: 17,
-              padding: "28px 28px 24px",
-              background: "#0f0f1e",
+              padding: "20px 16px 18px",
               position: "relative",
               overflow: "hidden",
             }}
+            className="sm:px-6 sm:py-6"
           >
-            {/* Top glow line */}
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: "50%",
-                transform: "translateX(-50%)",
-                height: 1,
-                width: "60%",
-                background:
-                  "linear-gradient(90deg, transparent, rgba(124,92,252,0.55), transparent)",
-              }}
-            />
-            {/* Ambient blob */}
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                top: -40,
-                right: -40,
-                width: 140,
-                height: 140,
-                borderRadius: "50%",
-                background: "rgba(244,113,181,0.05)",
-                filter: "blur(36px)",
-                pointerEvents: "none",
-              }}
-            />
-
             <p
               style={{
                 margin: "0 0 4px",
@@ -115,7 +80,7 @@ export default async function PostDetailPage({ params }: PostPageProps) {
                 fontWeight: 500,
                 letterSpacing: "0.13em",
                 textTransform: "uppercase",
-                color: "#7c5cfc",
+                color: "hsl(var(--muted-foreground))",
               }}
             >
               Editing
@@ -123,10 +88,10 @@ export default async function PostDetailPage({ params }: PostPageProps) {
             <h1
               style={{
                 margin: 0,
-                fontFamily: "'Syne', sans-serif",
+                fontFamily: "'Poppins', sans-serif",
                 fontSize: 26,
                 fontWeight: 800,
-                color: "#eeeaf8",
+                color: "hsl(var(--foreground))",
                 letterSpacing: "-0.03em",
               }}
             >
@@ -136,7 +101,7 @@ export default async function PostDetailPage({ params }: PostPageProps) {
               style={{
                 margin: "6px 0 0",
                 fontSize: 13,
-                color: "#7a7499",
+                color: "hsl(var(--muted-foreground))",
                 fontWeight: 300,
                 lineHeight: 1.5,
               }}
@@ -151,6 +116,7 @@ export default async function PostDetailPage({ params }: PostPageProps) {
         <PostForm
           mode="edit"
           initialPost={post}
+          workspaceId={post.workspace_id}
           editAction={updatePostAction}
         />
       </section>

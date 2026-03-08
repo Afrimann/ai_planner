@@ -313,6 +313,12 @@ export async function fetchScheduledPostsForCurrentUser(): Promise<
   });
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      // Unauthenticated/expired sessions are normal on public pages and
+      // immediately after sign-out. Treat as no reminders instead of noise.
+      return [];
+    }
+
     throw new Error(`Failed to load scheduled posts (${response.status}).`);
   }
 

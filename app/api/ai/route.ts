@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuthenticatedUser } from "@/lib/auth";
 import { rewriteCaption, shortenText } from "@/lib/ai/service";
+import { resolveActiveWorkspaceIdForUser } from "@/lib/workspace-context";
 import { insertAILog } from "@/supabase/client";
 
 type AIAction = "rewrite_caption" | "shorten_text";
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const workspaceId = await resolveActiveWorkspaceIdForUser(userId);
     const outputText =
       payload.action === "rewrite_caption"
         ? await rewriteCaption(inputText)
@@ -40,6 +42,7 @@ export async function POST(request: Request) {
 
     await insertAILog({
       user_id: userId,
+      workspace_id: workspaceId,
       action: payload.action,
       input_text: inputText,
       output_text: outputText,

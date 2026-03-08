@@ -8,33 +8,35 @@ import { LandingHeader } from "@/components/LandingHeader";
 import { useCurrentUser } from "@/lib/use-current-user";
 
 const GLOBAL_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
   .nexus-btn {
-    background: linear-gradient(135deg, #7c5cfc 0%, #6d4fe0 100%) !important;
-    border: none !important;
-    border-radius: 12px !important;
+    background: #000 !important;
+    border: 1px solid #000 !important;
+    border-radius: 6px !important;
     color: #fff !important;
-    font-family: 'Syne', sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 14px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.03em !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.01em !important;
     padding: 12px 24px !important;
     cursor: pointer !important;
-    transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease !important;
+    transition: all 0.2s [0.4,0,0.2,1] !important;
   }
-  .nexus-btn:hover:not(:disabled) { transform: translateY(-1px) !important; }
+  .nexus-btn:hover:not(:disabled) {
+    background: #333 !important;
+    transform: translateY(-1px) !important;
+  }
 
   .nexus-metric-card {
-    position: relative;
-    border-radius: 16px;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(124,92,252,0.35) 0%, rgba(244,113,181,0.12) 50%, rgba(124,92,252,0.08) 100%);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 8px;
+    padding: 24px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    transition: all 0.2s [0.4,0,0.2,1];
   }
-  .nexus-metric-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,92,252,0.18); }
-  .nexus-metric-inner { border-radius: 15px; padding: 24px; background: #0f0f1e; height: 100%; position: relative; overflow: hidden; }
-  .nexus-metric-inner::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); height: 1px; width: 60%; background: linear-gradient(90deg, transparent, rgba(124,92,252,0.5), transparent); }
+  .nexus-metric-card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transform: translateY(-2px);
+  }
 `;
 
 export default function PricingPage() {
@@ -89,7 +91,7 @@ export default function PricingPage() {
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-syne font-bold text-white">Pricing</h1>
+          <h1 className="text-4xl font-Poppins font-bold text-white">Pricing</h1>
           <p className="mt-4 text-zinc-300">
             Choose the plan that fits your needs.
           </p>
@@ -118,7 +120,7 @@ export default function PricingPage() {
                     Recommended
                   </span>
                 )}
-                <h3 className="mt-4 text-xl font-syne font-semibold text-white">
+                <h3 className="mt-4 text-xl font-Poppins font-semibold text-white">
                   {plan.name}
                 </h3>
                 <p className="mt-2 text-white text-3xl font-extrabold">
@@ -166,3 +168,4 @@ export default function PricingPage() {
     </Fragment>
   );
 }
+

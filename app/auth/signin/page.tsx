@@ -6,23 +6,20 @@ import { motion } from "framer-motion";
 
 import { signInAction, type SignInActionState } from "@/app/auth/actions";
 import { LockIcon, MailIcon } from "@/components/ui/AuthIcons";
-import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
 import { Button } from "@/components/ui/button";
 
 const NEXUS_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
   .nexus-form label,
   .nexus-form [data-slot="label"],
   .nexus-form [class*="label"],
   .nexus-form [class*="Label"] {
-    color: #d4cfee !important;
-    font-family: 'DM Sans', sans-serif !important;
+    color: hsl(var(--foreground)) !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 13px !important;
     font-weight: 500 !important;
-    letter-spacing: 0.02em !important;
+    letter-spacing: 0.01em !important;
   }
 
   .nexus-form p.text-black,
@@ -30,78 +27,56 @@ const NEXUS_STYLES = `
   .nexus-form p[class*="text-black"],
   .nexus-form [aria-invalid="true"] ~ p,
   .nexus-form p[class~="text-xs"] {
-    color: #f87171 !important;
+    color: hsl(var(--foreground)) !important;
   }
 
   .nexus-form [class*="border-black"] {
-    border-color: rgba(248,113,113,0.6) !important;
+    border-color: hsl(var(--foreground)) !important;
   }
 
   .nexus-form input,
   .nexus-form input[type="text"],
   .nexus-form input[type="email"],
   .nexus-form input[type="password"] {
-    background-color: #05050d !important;
-    color: #eeeaf8 !important;
-    -webkit-text-fill-color: #eeeaf8 !important;
-    border: 1px solid rgba(124,92,252,0.25) !important;
-    border-radius: 12px !important;
-    font-family: 'DM Sans', sans-serif !important;
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 6px !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 14px !important;
     transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
   }
   .nexus-form input:focus {
-    border-color: rgba(124,92,252,0.65) !important;
-    box-shadow: 0 0 0 3px rgba(124,92,252,0.13) !important;
+    border-color: hsl(var(--ring)) !important;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.12) !important;
     outline: none !important;
   }
   .nexus-form input::placeholder {
-    color: #3e3a5e !important;
-    -webkit-text-fill-color: #3e3a5e !important;
+    color: hsl(var(--muted-foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--muted-foreground)) !important;
     opacity: 1 !important;
   }
   .nexus-form input:-webkit-autofill,
   .nexus-form input:-webkit-autofill:hover,
   .nexus-form input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0px 1000px #05050d inset !important;
-    -webkit-text-fill-color: #eeeaf8 !important;
-    border-color: rgba(124,92,252,0.25) !important;
+    -webkit-box-shadow: 0 0 0px 1000px hsl(var(--background)) inset !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
   }
 
   .nexus-form .group {
-    background: #05050d !important;
-    border-color: rgba(124,92,252,0.25) !important;
+    background: hsl(var(--input)) !important;
+    border-color: hsl(var(--border)) !important;
   }
   .nexus-form .group:focus-within {
-    border-color: rgba(124,92,252,0.65) !important;
-    box-shadow: 0 0 0 3px rgba(124,92,252,0.13) !important;
+    border-color: hsl(var(--ring)) !important;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1) !important;
   }
-  .nexus-form .group span svg,
-  .nexus-form .group span {
-    color: #6b6890 !important;
+  .nexus-form .group > span svg,
+  .nexus-form .group > span {
+    color: hsl(var(--muted-foreground)) !important;
   }
-
-  .nexus-btn {
-    background: linear-gradient(135deg, #7c5cfc 0%, #6d4fe0 100%) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    color: #fff !important;
-    font-family: 'Syne', sans-serif !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.03em !important;
-    padding: 12px 24px !important;
-    width: 100% !important;
-    cursor: pointer !important;
-    transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease !important;
-    box-shadow: 0 4px 24px rgba(124,92,252,0.35) !important;
-  }
-  .nexus-btn:hover:not(:disabled) {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 8px 36px rgba(124,92,252,0.52) !important;
-  }
-  .nexus-btn:active { transform: translateY(0) !important; }
-  .nexus-btn:disabled { opacity: 0.5 !important; cursor: not-allowed !important; }
 `;
 
 function GridOverlay() {
@@ -127,7 +102,7 @@ function GridOverlay() {
             <path
               d="M 60 0 L 0 0 0 60"
               fill="none"
-              stroke="#a78bfa"
+              stroke="hsl(var(--foreground))"
               strokeWidth="1"
             />
           </pattern>
@@ -164,8 +139,8 @@ export default function SignInPage() {
           justifyContent: "center",
           overflow: "hidden",
           padding: "48px 16px",
-          background: "#07070f",
-          fontFamily: "'DM Sans', sans-serif",
+          background: "hsl(var(--background))",
+          fontFamily: "'Poppins', sans-serif",
         }}
       >
         <GridOverlay />
@@ -179,7 +154,7 @@ export default function SignInPage() {
             height: 500,
             borderRadius: "50%",
             filter: "blur(120px)",
-            background: "rgba(124,92,252,0.10)",
+            background: "rgba(0,0,0,0.06)",
             pointerEvents: "none",
           }}
         />
@@ -193,7 +168,7 @@ export default function SignInPage() {
             height: 400,
             borderRadius: "50%",
             filter: "blur(100px)",
-            background: "rgba(244,113,181,0.07)",
+            background: "rgba(0,0,0,0.05)",
             pointerEvents: "none",
           }}
         />
@@ -209,14 +184,14 @@ export default function SignInPage() {
             borderRadius: 20,
             padding: 1,
             background:
-              "linear-gradient(135deg, rgba(124,92,252,0.45) 0%, rgba(244,113,181,0.2) 50%, rgba(124,92,252,0.1) 100%)",
+              "linear-gradient(135deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.18) 100%)",
           }}
         >
           <div
             style={{
               borderRadius: 19,
               padding: "40px 32px",
-              background: "#0f0f1e",
+              background: "hsl(var(--card))",
               position: "relative",
             }}
           >
@@ -230,7 +205,7 @@ export default function SignInPage() {
                 height: 1,
                 width: "66%",
                 background:
-                  "linear-gradient(90deg, transparent, rgba(124,92,252,0.6), transparent)",
+                  "linear-gradient(90deg, transparent, rgba(0,0,0,0.5), transparent)",
               }}
             />
 
@@ -251,9 +226,7 @@ export default function SignInPage() {
                   width: 48,
                   height: 48,
                   borderRadius: 14,
-                  background:
-                    "linear-gradient(135deg, #7c5cfc 0%, #f471b5 100%)",
-                  boxShadow: "0 0 28px rgba(124,92,252,0.45)",
+                  background: "hsl(var(--foreground))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -278,10 +251,10 @@ export default function SignInPage() {
               <div style={{ textAlign: "center" }}>
                 <h1
                   style={{
-                    fontFamily: "'Syne', sans-serif",
+                    fontFamily: "'Poppins', sans-serif",
                     fontSize: 22,
                     fontWeight: 700,
-                    color: "#eeeaf8",
+                    color: "hsl(var(--foreground))",
                     letterSpacing: "-0.03em",
                     margin: 0,
                   }}
@@ -292,7 +265,7 @@ export default function SignInPage() {
                   style={{
                     marginTop: 6,
                     fontSize: 13,
-                    color: "#a099c8",
+                    color: "hsl(var(--muted-foreground))",
                     fontWeight: 300,
                     lineHeight: 1.6,
                   }}
@@ -360,9 +333,9 @@ export default function SignInPage() {
                     borderRadius: 12,
                     padding: "10px 14px",
                     fontSize: 13,
-                    background: "rgba(239,68,68,0.08)",
-                    border: "1px solid rgba(239,68,68,0.3)",
-                    color: "#fca5a5",
+                    background: "hsl(var(--muted))",
+                    border: "1px solid hsl(var(--border))",
+                    color: "hsl(var(--foreground))",
                   }}
                 >
                   {safeState.formError}
@@ -378,7 +351,7 @@ export default function SignInPage() {
                   type="submit"
                   fullWidth
                   loading={pending}
-                  className="nexus-btn"
+                  className="btn-primary"
                 >
                   {pending ? "Signing in..." : "Sign in"}
                 </Button>
@@ -402,15 +375,15 @@ export default function SignInPage() {
                   style={{
                     fontSize: 13,
                     fontWeight: 600,
-                    color: "#a78bfa",
+                    color: "hsl(var(--foreground))",
                     textDecoration: "none",
                     transition: "color 0.2s ease",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = "#c4b5fd")
+                    (e.currentTarget.style.color = "hsl(var(--muted-foreground))")
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = "#a78bfa")
+                    (e.currentTarget.style.color = "hsl(var(--foreground))")
                   }
                 >
                   Create account
@@ -419,15 +392,15 @@ export default function SignInPage() {
                   href="/auth/forgot-password"
                   style={{
                     fontSize: 13,
-                    color: "#7a7499",
+                    color: "hsl(var(--muted-foreground))",
                     textDecoration: "none",
                     transition: "color 0.2s ease",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = "#a099c8")
+                    (e.currentTarget.style.color = "hsl(var(--foreground))")
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = "#7a7499")
+                    (e.currentTarget.style.color = "hsl(var(--muted-foreground))")
                   }
                 >
                   Forgot password?
@@ -440,3 +413,4 @@ export default function SignInPage() {
     </>
   );
 }
+

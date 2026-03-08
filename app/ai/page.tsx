@@ -3,7 +3,7 @@
 import { useActionState, useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles,
+  Wand,
   Copy,
   Check,
   RotateCcw,
@@ -127,103 +127,85 @@ const REFINEMENTS: RefinementOption[] = [
 ];
 
 const PAGE_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
   .ai-page * { box-sizing: border-box; }
 
   /* Textarea */
   .ai-textarea {
     width: 100%;
-    background: #05050d;
-    color: #eeeaf8;
-    border: 1px solid rgba(124,92,252,0.22);
-    border-radius: 14px;
-    font-family: 'DM Sans', sans-serif;
+    background: hsl(var(--input));
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
     font-size: 14px;
-    line-height: 1.7;
-    padding: 14px 16px;
+    line-height: 1.5;
+    padding: 12px 16px;
     outline: none;
     resize: vertical;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease;
-    -webkit-text-fill-color: #eeeaf8;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .ai-textarea:focus {
-    border-color: rgba(124,92,252,0.6);
-    box-shadow: 0 0 0 3px rgba(124,92,252,0.12);
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1);
   }
-  .ai-textarea::placeholder { color: #3e3a5e; -webkit-text-fill-color: #3e3a5e; }
+  .ai-textarea::placeholder { color: hsl(var(--muted-foreground)); }
 
   /* Cards */
   .ai-card {
-    border-radius: 18px;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(124,92,252,0.35) 0%, rgba(244,113,181,0.12) 50%, rgba(124,92,252,0.08) 100%);
+    @apply card;
   }
   .ai-card-inner {
-    border-radius: 17px;
-    background: #0f0f1e;
     padding: 24px;
     position: relative;
     overflow: hidden;
-  }
-  .ai-card-inner::before {
-    content: '';
-    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-    height: 1px; width: 60%;
-    background: linear-gradient(90deg, transparent, rgba(124,92,252,0.5), transparent);
   }
 
   /* Section label */
   .ai-section-label {
     font-size: 10px; font-weight: 600; letter-spacing: 0.14em;
-    text-transform: uppercase; color: #7c5cfc;
-    font-family: 'DM Sans', sans-serif; margin: 0 0 4px;
+    text-transform: uppercase; color: hsl(var(--muted-foreground));
+    font-family: 'Poppins', sans-serif; margin: 0 0 4px;
   }
   .ai-section-title {
-    font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700;
-    color: #eeeaf8; letter-spacing: -0.02em; margin: 0 0 6px;
+    font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 700;
+    color: hsl(var(--foreground)); letter-spacing: -0.02em; margin: 0 0 6px;
   }
   .ai-section-desc {
-    font-size: 12.5px; color: #7a7499; font-weight: 300;
+    font-size: 12.5px; color: hsl(var(--muted-foreground)); font-weight: 400;
     line-height: 1.5; margin: 0 0 20px;
   }
 
   /* Primary btn */
   .ai-btn-primary {
+    @apply btn-primary;
     display: inline-flex; align-items: center; gap: 7px;
-    padding: 10px 20px; border-radius: 11px;
-    background: linear-gradient(135deg, #7c5cfc 0%, #6d4fe0 100%);
-    color: #fff; font-size: 13px; font-weight: 600;
-    font-family: 'DM Sans', sans-serif; border: none; cursor: pointer;
-    box-shadow: 0 4px 18px rgba(124,92,252,0.38);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
     white-space: nowrap;
   }
-  .ai-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 26px rgba(124,92,252,0.55); }
   .ai-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* Ghost btn */
   .ai-btn-ghost {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 8px 14px; border-radius: 9px;
-    background: rgba(124,92,252,0.07);
-    color: #a78bfa; font-size: 12px; font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
-    border: 1px solid rgba(124,92,252,0.18); cursor: pointer;
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground)); font-size: 12px; font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    border: 1px solid hsl(var(--border)); cursor: pointer;
     transition: all 0.15s ease; white-space: nowrap;
   }
-  .ai-btn-ghost:hover { background: rgba(124,92,252,0.14); color: #c4b5fd; border-color: rgba(124,92,252,0.35); }
+  .ai-btn-ghost:hover { background: hsl(var(--accent)); }
 
   /* Tone card */
   .tone-card {
     border-radius: 12px; padding: 12px 14px; cursor: pointer;
-    border: 1px solid rgba(124,92,252,0.12);
-    background: rgba(255,255,255,0.02);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
     transition: all 0.18s ease; position: relative;
     display: flex; align-items: flex-start; gap: 10;
   }
-  .tone-card:hover { background: rgba(124,92,252,0.08); border-color: rgba(124,92,252,0.28); }
-  .tone-card.active { background: rgba(124,92,252,0.12); border-color: rgba(124,92,252,0.45); }
+  .tone-card:hover { background: hsl(var(--muted)); border-color: hsl(var(--ring)); }
+  .tone-card.active { background: hsl(var(--accent)); border-color: hsl(var(--ring)); }
   .tone-card.saved-tone { border-color: rgba(244,113,181,0.3); background: rgba(244,113,181,0.05); }
   .tone-card.saved-tone:hover { background: rgba(244,113,181,0.1); }
   .tone-card.saved-tone.active { background: rgba(244,113,181,0.12); border-color: rgba(244,113,181,0.5); }
@@ -235,7 +217,7 @@ const PAGE_STYLES = `
     background: rgba(124,92,252,0.06);
     border: 1px solid rgba(124,92,252,0.16);
     color: #8b85a8; font-size: 12px; font-weight: 500;
-    font-family: 'DM Sans', sans-serif; cursor: pointer;
+    font-family: 'Poppins', sans-serif; cursor: pointer;
     transition: all 0.15s ease;
   }
   .refine-chip:hover { background: rgba(124,92,252,0.14); color: #c4b5fd; border-color: rgba(124,92,252,0.35); }
@@ -263,7 +245,7 @@ const PAGE_STYLES = `
   /* Platform selector */
   .platform-chip {
     padding: 5px 13px; border-radius: 99px; cursor: pointer;
-    font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500; font-family: 'Poppins', sans-serif;
     border: 1px solid rgba(124,92,252,0.15); color: #6b6890;
     background: transparent; transition: all 0.15s ease;
   }
@@ -323,7 +305,7 @@ function ToneBadge({
         color,
         fontSize: 11,
         fontWeight: 500,
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: "'Poppins', sans-serif",
       }}
     >
       {emoji} {name}
@@ -494,7 +476,7 @@ export default function AIPage() {
         style={{
           padding: "32px 28px",
           minHeight: "100%",
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "'Poppins', sans-serif",
           background: "#07070f",
           display: "flex",
           flexDirection: "column",
@@ -517,7 +499,7 @@ export default function AIPage() {
               <h1
                 style={{
                   margin: 0,
-                  fontFamily: "'Syne', sans-serif",
+                  fontFamily: "'Poppins', sans-serif",
                   fontSize: 28,
                   fontWeight: 800,
                   color: "#eeeaf8",
@@ -679,7 +661,7 @@ export default function AIPage() {
                       </>
                     ) : (
                       <>
-                        <Sparkles style={{ width: 14, height: 14 }} /> Generate
+                        <Wand style={{ width: 14, height: 14 }} /> Generate
                         Caption
                       </>
                     )}
@@ -728,7 +710,7 @@ export default function AIPage() {
                       style={{
                         fontSize: 11,
                         color: charCount > charLimit ? "#f87171" : "#4b4870",
-                        fontFamily: "'DM Sans', sans-serif",
+                        fontFamily: "'Poppins', sans-serif",
                       }}
                     >
                       {charCount}/{charLimit}
@@ -893,7 +875,7 @@ export default function AIPage() {
                               borderRadius: 9,
                               padding: "8px 12px",
                               fontSize: 13,
-                              fontFamily: "'DM Sans', sans-serif",
+                              fontFamily: "'Poppins', sans-serif",
                               outline: "none",
                               width: "100%",
                             }}
@@ -912,7 +894,7 @@ export default function AIPage() {
                             padding: "8px 12px",
                             fontSize: 13,
                             resize: "vertical",
-                            fontFamily: "'DM Sans', sans-serif",
+                            fontFamily: "'Poppins', sans-serif",
                             outline: "none",
                             width: "100%",
                           }}
@@ -1118,7 +1100,7 @@ export default function AIPage() {
                         color: "#d4cfee",
                         letterSpacing: "0.08em",
                         textTransform: "uppercase",
-                        fontFamily: "'DM Sans', sans-serif",
+                        fontFamily: "'Poppins', sans-serif",
                       }}
                     >
                       Generation History
@@ -1244,3 +1226,4 @@ export default function AIPage() {
     </>
   );
 }
+

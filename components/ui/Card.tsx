@@ -19,13 +19,13 @@ export function Card({
 }: CardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       <section
         className={cn(
-          "relative overflow-hidden rounded-2xl border border-zinc-300 bg-white p-6 shadow-[0_18px_36px_-24px_rgba(0,0,0,0.28)]",
+          "rounded-lg border border-border bg-card p-6 shadow-subtle",
           className,
         )}
         {...props}

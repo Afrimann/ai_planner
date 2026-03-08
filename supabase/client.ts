@@ -8,6 +8,17 @@ type PostInsert = Database["public"]["Tables"]["posts"]["Insert"];
 type PostUpdate = Database["public"]["Tables"]["posts"]["Update"];
 type AILogRow = Database["public"]["Tables"]["ai_logs"]["Row"];
 type AILogInsert = Database["public"]["Tables"]["ai_logs"]["Insert"];
+type WorkspaceRow = Database["public"]["Tables"]["workspaces"]["Row"];
+type WorkspaceInsert = Database["public"]["Tables"]["workspaces"]["Insert"];
+type WorkspaceMemberRow = Database["public"]["Tables"]["workspace_members"]["Row"];
+type WorkspaceMemberInsert =
+  Database["public"]["Tables"]["workspace_members"]["Insert"];
+type WorkspaceMemberUpdate =
+  Database["public"]["Tables"]["workspace_members"]["Update"];
+type ReportRow = Database["public"]["Tables"]["reports"]["Row"];
+type ReportInsert = Database["public"]["Tables"]["reports"]["Insert"];
+type ActivityRow = Database["public"]["Tables"]["activities"]["Row"];
+type ActivityInsert = Database["public"]["Tables"]["activities"]["Insert"];
 
 interface SupabaseAuthUser {
   id: string;
@@ -65,6 +76,24 @@ function parseErrorMessage(
     return "Supabase table public.ai_logs is missing in the connected project. Run supabase/schema.sql in your Supabase SQL editor (or apply migrations), then retry.";
   }
 
+  if (rawMessage.includes("Could not find the table 'public.workspaces'")) {
+    return "Supabase table public.workspaces is missing in the connected project. Run supabase/schema.sql in your Supabase SQL editor (or apply migrations), then retry.";
+  }
+
+  if (
+    rawMessage.includes("Could not find the table 'public.workspace_members'")
+  ) {
+    return "Supabase table public.workspace_members is missing in the connected project. Run supabase/schema.sql in your Supabase SQL editor (or apply migrations), then retry.";
+  }
+
+  if (rawMessage.includes("Could not find the table 'public.reports'")) {
+    return "Supabase table public.reports is missing in the connected project. Run supabase/schema.sql in your Supabase SQL editor (or apply migrations), then retry.";
+  }
+
+  if (rawMessage.includes("Could not find the table 'public.activities'")) {
+    return "Supabase table public.activities is missing in the connected project. Run supabase/schema.sql in your Supabase SQL editor (or apply migrations), then retry.";
+  }
+
   return rawMessage || `Supabase request failed (${status}).`;
 }
 
@@ -95,6 +124,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+function encodeFilterValue(value: string): string {
+  return encodeURIComponent(value);
 }
 
 function encodeStorageObjectPath(path: string): string {
@@ -276,7 +309,21 @@ export async function resolveImageUrlForDisplay(
 // list of columns we request when querying the posts table. keep this in
 // sync with the schema and the `Post` type in our application.
 const postColumns =
-  "id,user_id,platform,title,caption,body,image_url,status,scheduled_date,scheduled_time,created_at,updated_at,published";
+  "id,user_id,workspace_id,platform,title,caption,body,image_url,status,scheduled_date,scheduled_time,created_at,updated_at,published";
+const aiLogColumns =
+  "id,user_id,workspace_id,action,input_text,output_text,created_at";
+
+function buildWorkspaceScopeFilter(workspaceId: string | null | undefined): string {
+  if (workspaceId === undefined) {
+    return "";
+  }
+
+  if (workspaceId === null) {
+    return "&workspace_id=is.null";
+  }
+
+  return `&workspace_id=eq.${encodeFilterValue(workspaceId)}`;
+}
 
 export async function selectPosts(): Promise<PostRow[]> {
   const query = `posts?select=${postColumns}&order=created_at.desc`;
@@ -336,19 +383,23 @@ export async function uploadPostImage(
   return publicUrl;
 }
 
-export async function insertPost(post: PostInsert): Promise<void> {
-  await request<PostRow[]>("posts", {
+export async function insertPost(post: PostInsert): Promise<PostRow> {
+  const rows = await request<PostRow[]>("posts", {
     method: "POST",
     body: JSON.stringify(post),
   });
+
+  return rows[0];
 }
 
 export async function updatePostByIdForUser(
   id: string,
   userId: string,
+  workspaceId: string | null | undefined = undefined,
   update: PostUpdate,
 ): Promise<void> {
-  const query = `posts?id=eq.${id}&user_id=eq.${userId}`;
+  const workspaceFilter = buildWorkspaceScopeFilter(workspaceId);
+  const query = `posts?id=eq.${id}&user_id=eq.${userId}${workspaceFilter}`;
   await request<PostRow[]>(query, {
     method: "PATCH",
     body: JSON.stringify(update),
@@ -359,16 +410,43 @@ export async function updatePostByIdForUser(
 // encode the additional filters that are required by the application
 // (user ownership, date ranges, etc.).
 
-export async function selectPostsByUserId(userId: string): Promise<PostRow[]> {
-  const query = `posts?select=${postColumns}&user_id=eq.${userId}&order=created_at.desc`;
+export async function selectPostsByUserId(
+  userId: string,
+  workspaceId?: string | null,
+): Promise<PostRow[]> {
+  const workspaceFilter = buildWorkspaceScopeFilter(workspaceId);
+  const query = `posts?select=${postColumns}&user_id=eq.${userId}${workspaceFilter}&order=created_at.desc`;
+  return request<PostRow[]>(query, { method: "GET" });
+}
+
+export async function selectPostsByUserIds(
+  userIds: string[],
+  limit = 5000,
+): Promise<PostRow[]> {
+  if (userIds.length === 0) {
+    return [];
+  }
+
+  const inClause = userIds.map((id) => encodeFilterValue(id)).join(",");
+  const query = `posts?select=${postColumns}&user_id=in.(${inClause})&order=created_at.desc&limit=${limit}`;
+  return request<PostRow[]>(query, { method: "GET" });
+}
+
+export async function selectPostsByWorkspaceId(
+  workspaceId: string,
+  limit = 5000,
+): Promise<PostRow[]> {
+  const query = `posts?select=${postColumns}&workspace_id=eq.${encodeFilterValue(workspaceId)}&order=created_at.desc&limit=${limit}`;
   return request<PostRow[]>(query, { method: "GET" });
 }
 
 export async function selectPostByIdForUser(
   id: string,
   userId: string,
+  workspaceId?: string | null,
 ): Promise<PostRow | null> {
-  const query = `posts?select=${postColumns}&id=eq.${id}&user_id=eq.${userId}&limit=1`;
+  const workspaceFilter = buildWorkspaceScopeFilter(workspaceId);
+  const query = `posts?select=${postColumns}&id=eq.${id}&user_id=eq.${userId}${workspaceFilter}&limit=1`;
   const rows = await request<PostRow[]>(query, { method: "GET" });
   return rows[0] ?? null;
 }
@@ -395,8 +473,10 @@ export async function updatePostById(
 export async function deletePostByIdForUser(
   id: string,
   userId: string,
+  workspaceId?: string | null,
 ): Promise<void> {
-  const query = `posts?id=eq.${id}&user_id=eq.${userId}`;
+  const workspaceFilter = buildWorkspaceScopeFilter(workspaceId);
+  const query = `posts?id=eq.${id}&user_id=eq.${userId}${workspaceFilter}`;
   await request<void>(query, {
     method: "DELETE",
   });
@@ -411,8 +491,192 @@ export async function insertAILog(log: AILogInsert): Promise<void> {
 
 export async function selectAILogsByUserId(
   userId: string,
+  workspaceId: string | null | undefined,
   limit = 60,
 ): Promise<AILogRow[]> {
-  const query = `ai_logs?select=id,user_id,action,input_text,output_text,created_at&user_id=eq.${userId}&order=created_at.desc&limit=${limit}`;
+  const workspaceFilter = buildWorkspaceScopeFilter(workspaceId);
+  const query = `ai_logs?select=${aiLogColumns}&user_id=eq.${userId}${workspaceFilter}&order=created_at.desc&limit=${limit}`;
   return request<AILogRow[]>(query, { method: "GET" });
+}
+
+export async function selectAILogsByUserIds(
+  userIds: string[],
+  limit = 5000,
+): Promise<AILogRow[]> {
+  if (userIds.length === 0) {
+    return [];
+  }
+
+  const inClause = userIds.map((id) => encodeFilterValue(id)).join(",");
+  const query = `ai_logs?select=${aiLogColumns}&user_id=in.(${inClause})&order=created_at.desc&limit=${limit}`;
+  return request<AILogRow[]>(query, { method: "GET" });
+}
+
+export async function selectAILogsByWorkspaceId(
+  workspaceId: string,
+  limit = 5000,
+): Promise<AILogRow[]> {
+  const query = `ai_logs?select=${aiLogColumns}&workspace_id=eq.${encodeFilterValue(workspaceId)}&order=created_at.desc&limit=${limit}`;
+  return request<AILogRow[]>(query, { method: "GET" });
+}
+
+const workspaceColumns = "id,name,owner_id,created_at";
+const workspaceMemberColumns =
+  "id,workspace_id,user_id,email,role,status,invited_by,invited_at";
+const reportColumns = "id,workspace_id,title,type,created_at,created_by";
+const activityColumns =
+  "id,actor_id,workspace_id,action,entity_type,entity_id,metadata,created_at";
+
+export async function selectWorkspaceById(id: string): Promise<WorkspaceRow | null> {
+  const query = `workspaces?select=${workspaceColumns}&id=eq.${encodeFilterValue(id)}&limit=1`;
+  const rows = await request<WorkspaceRow[]>(query, { method: "GET" });
+  return rows[0] ?? null;
+}
+
+export async function selectWorkspacesByOwnerId(
+  ownerId: string,
+): Promise<WorkspaceRow[]> {
+  const query = `workspaces?select=${workspaceColumns}&owner_id=eq.${encodeFilterValue(ownerId)}&order=created_at.desc`;
+  return request<WorkspaceRow[]>(query, { method: "GET" });
+}
+
+export async function selectWorkspacesByIds(ids: string[]): Promise<WorkspaceRow[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const inClause = ids.map((id) => encodeFilterValue(id)).join(",");
+  const query = `workspaces?select=${workspaceColumns}&id=in.(${inClause})&order=created_at.desc`;
+  return request<WorkspaceRow[]>(query, { method: "GET" });
+}
+
+export async function insertWorkspace(workspace: WorkspaceInsert): Promise<WorkspaceRow> {
+  const rows = await request<WorkspaceRow[]>("workspaces", {
+    method: "POST",
+    body: JSON.stringify(workspace),
+  });
+
+  return rows[0];
+}
+
+export async function selectWorkspaceMembersByUserId(
+  userId: string,
+  status?: Database["public"]["Enums"]["workspace_member_status"],
+): Promise<WorkspaceMemberRow[]> {
+  const statusFilter = status ? `&status=eq.${status}` : "";
+  const query = `workspace_members?select=${workspaceMemberColumns}&user_id=eq.${encodeFilterValue(userId)}${statusFilter}&order=invited_at.desc`;
+  return request<WorkspaceMemberRow[]>(query, { method: "GET" });
+}
+
+export async function selectWorkspaceMembersByEmail(
+  email: string,
+  status?: Database["public"]["Enums"]["workspace_member_status"],
+): Promise<WorkspaceMemberRow[]> {
+  const statusFilter = status ? `&status=eq.${status}` : "";
+  const query = `workspace_members?select=${workspaceMemberColumns}&email=eq.${encodeFilterValue(email)}${statusFilter}&order=invited_at.desc`;
+  return request<WorkspaceMemberRow[]>(query, { method: "GET" });
+}
+
+export async function selectWorkspaceMembersByWorkspaceId(
+  workspaceId: string,
+  status?: Database["public"]["Enums"]["workspace_member_status"],
+): Promise<WorkspaceMemberRow[]> {
+  const statusFilter = status ? `&status=eq.${status}` : "";
+  const query = `workspace_members?select=${workspaceMemberColumns}&workspace_id=eq.${encodeFilterValue(workspaceId)}${statusFilter}&order=invited_at.desc`;
+  return request<WorkspaceMemberRow[]>(query, { method: "GET" });
+}
+
+export async function selectWorkspaceMemberByWorkspaceAndEmail(
+  workspaceId: string,
+  email: string,
+): Promise<WorkspaceMemberRow | null> {
+  const query = `workspace_members?select=${workspaceMemberColumns}&workspace_id=eq.${encodeFilterValue(workspaceId)}&email=eq.${encodeFilterValue(email)}&limit=1`;
+  const rows = await request<WorkspaceMemberRow[]>(query, { method: "GET" });
+  return rows[0] ?? null;
+}
+
+export async function selectWorkspaceMemberByWorkspaceAndUserId(
+  workspaceId: string,
+  userId: string,
+): Promise<WorkspaceMemberRow | null> {
+  const query = `workspace_members?select=${workspaceMemberColumns}&workspace_id=eq.${encodeFilterValue(workspaceId)}&user_id=eq.${encodeFilterValue(userId)}&limit=1`;
+  const rows = await request<WorkspaceMemberRow[]>(query, { method: "GET" });
+  return rows[0] ?? null;
+}
+
+export async function insertWorkspaceMember(
+  member: WorkspaceMemberInsert,
+): Promise<WorkspaceMemberRow> {
+  const rows = await request<WorkspaceMemberRow[]>("workspace_members", {
+    method: "POST",
+    body: JSON.stringify(member),
+  });
+
+  return rows[0];
+}
+
+export async function updateWorkspaceMemberById(
+  id: string,
+  update: WorkspaceMemberUpdate,
+): Promise<WorkspaceMemberRow | null> {
+  const query = `workspace_members?id=eq.${encodeFilterValue(id)}`;
+  const rows = await request<WorkspaceMemberRow[]>(query, {
+    method: "PATCH",
+    body: JSON.stringify(update),
+  });
+  return rows[0] ?? null;
+}
+
+export async function deleteWorkspaceMemberById(id: string): Promise<void> {
+  const query = `workspace_members?id=eq.${encodeFilterValue(id)}`;
+  await request<void>(query, { method: "DELETE" });
+}
+
+export async function selectReportsByWorkspaceId(
+  workspaceId: string,
+  limit = 50,
+): Promise<ReportRow[]> {
+  const query = `reports?select=${reportColumns}&workspace_id=eq.${encodeFilterValue(workspaceId)}&order=created_at.desc&limit=${limit}`;
+  return request<ReportRow[]>(query, { method: "GET" });
+}
+
+export async function selectReportByIdAndWorkspaceId(
+  reportId: string,
+  workspaceId: string,
+): Promise<ReportRow | null> {
+  const query = `reports?select=${reportColumns}&id=eq.${encodeFilterValue(reportId)}&workspace_id=eq.${encodeFilterValue(workspaceId)}&limit=1`;
+  const rows = await request<ReportRow[]>(query, { method: "GET" });
+  return rows[0] ?? null;
+}
+
+export async function insertReport(report: ReportInsert): Promise<ReportRow> {
+  const rows = await request<ReportRow[]>("reports", {
+    method: "POST",
+    body: JSON.stringify(report),
+  });
+  return rows[0];
+}
+
+export async function insertActivity(activity: ActivityInsert): Promise<ActivityRow> {
+  const rows = await request<ActivityRow[]>("activities", {
+    method: "POST",
+    body: JSON.stringify(activity),
+  });
+  return rows[0];
+}
+
+export async function selectUserActivities(
+  userId: string,
+  limit = 10,
+): Promise<ActivityRow[]> {
+  const query = `activities?select=${activityColumns}&actor_id=eq.${encodeFilterValue(userId)}&workspace_id=is.null&order=created_at.desc&limit=${limit}`;
+  return request<ActivityRow[]>(query, { method: "GET" });
+}
+
+export async function selectWorkspaceActivities(
+  workspaceId: string,
+  limit = 10,
+): Promise<ActivityRow[]> {
+  const query = `activities?select=${activityColumns}&workspace_id=eq.${encodeFilterValue(workspaceId)}&order=created_at.desc&limit=${limit}`;
+  return request<ActivityRow[]>(query, { method: "GET" });
 }

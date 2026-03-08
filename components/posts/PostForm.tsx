@@ -2,14 +2,13 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { ImageIcon, Sparkles, UploadCloud } from "lucide-react";
+import { ImageIcon, UploadCloud, Wand } from "lucide-react";
 
 import {
   createManagedPostAction,
   generateCaptionForPostAction,
 } from "@/app/posts/actions";
 import { Alert } from "@/components/ui/Alert";
-import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -20,6 +19,7 @@ interface PostFormProps {
   mode?: "create" | "edit";
   initialPost?: Post;
   editAction?: (formData: FormData) => Promise<void>;
+  workspaceId?: string | null;
 }
 
 type CreateFormState = {
@@ -46,7 +46,6 @@ type CaptionState = {
 };
 
 const FORM_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
   /* Labels — covers our spans AND Input component's internal label (text-black) */
   .nexus-post-form label > span,
@@ -57,8 +56,8 @@ const FORM_STYLES = `
   .nexus-post-form [class*="Label"],
   .nexus-post-form .text-black,
   .nexus-post-form .text-sm.font-medium {
-    color: #d4cfee !important;
-    font-family: 'DM Sans', sans-serif !important;
+    color: hsl(var(--muted-foreground)) !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 12px !important;
     font-weight: 500 !important;
     letter-spacing: 0.04em !important;
@@ -69,12 +68,12 @@ const FORM_STYLES = `
   .nexus-post-form input:not([type="file"]):not([type="hidden"]),
   .nexus-post-form select,
   .nexus-post-form textarea {
-    background: #05050d !important;
-    color: #eeeaf8 !important;
-    -webkit-text-fill-color: #eeeaf8 !important;
-    border: 1px solid rgba(124,92,252,0.22) !important;
+    background: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    border: 1px solid hsl(var(--border)) !important;
     border-radius: 12px !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 13.5px !important;
     outline: none !important;
     transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
@@ -82,20 +81,20 @@ const FORM_STYLES = `
   .nexus-post-form input:not([type="file"]):not([type="hidden"]):focus,
   .nexus-post-form select:focus,
   .nexus-post-form textarea:focus {
-    border-color: rgba(124,92,252,0.6) !important;
-    box-shadow: 0 0 0 3px rgba(124,92,252,0.12) !important;
+    border-color: hsl(var(--foreground) / 0.5) !important;
+    box-shadow: 0 0 0 3px hsl(var(--foreground) / 0.08) !important;
   }
   .nexus-post-form input::placeholder,
   .nexus-post-form textarea::placeholder {
-    color: #3e3a5e !important;
-    -webkit-text-fill-color: #3e3a5e !important;
+    color: hsl(var(--muted-foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--muted-foreground)) !important;
     opacity: 1 !important;
   }
   /* Custom select arrow */
   .nexus-post-form select {
     appearance: none !important;
     -webkit-appearance: none !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6890' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23717171' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: right 14px center !important;
     background-size: 14px !important;
@@ -103,33 +102,33 @@ const FORM_STYLES = `
     cursor: pointer !important;
   }
   .nexus-post-form select:focus {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: right 14px center !important;
     background-size: 14px !important;
   }
 
   .nexus-post-form select option {
-    background: #0f0f1e !important;
-    color: #eeeaf8 !important;
+    background: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
   }
   .nexus-post-form input:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0px 1000px #05050d inset !important;
-    -webkit-text-fill-color: #eeeaf8 !important;
+    -webkit-box-shadow: 0 0 0px 1000px hsl(var(--card)) inset !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
   }
 
   /* Char counter / helper text */
   .nexus-char-counter {
-    color: #4b4870 !important;
-    font-family: 'DM Sans', sans-serif !important;
+    color: hsl(var(--muted-foreground)) !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 11px !important;
   }
   .nexus-open-ai-link {
-    color: #7c5cfc !important;
+    color: hsl(var(--foreground)) !important;
     font-size: 11px !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     text-decoration: underline !important;
-    text-decoration-color: rgba(124,92,252,0.3) !important;
+    text-decoration-color: hsl(var(--foreground) / 0.3) !important;
     text-underline-offset: 3px !important;
     background: none !important;
     border: none !important;
@@ -137,7 +136,7 @@ const FORM_STYLES = `
     padding: 0 !important;
     transition: color 0.15s ease !important;
   }
-  .nexus-open-ai-link:hover { color: #c4b5fd !important; }
+  .nexus-open-ai-link:hover { color: hsl(var(--foreground)) !important; }
 
   /* Field error text — also catches Input's internal p.text-black error */
   .nexus-post-form .nexus-field-error,
@@ -145,16 +144,16 @@ const FORM_STYLES = `
   .nexus-post-form p[id$="-error"],
   .nexus-post-form p[class~="text-xs"],
   .nexus-post-form [aria-invalid="true"] ~ p {
-    color: #f87171 !important;
+    color: hsl(var(--destructive)) !important;
     font-size: 11px !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     margin-top: 2px !important;
   }
 
   /* Section label */
   .nexus-section-label {
-    color: #d4cfee;
-    font-family: 'DM Sans', sans-serif;
+    color: hsl(var(--muted-foreground));
+    font-family: 'Poppins', sans-serif;
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.04em;
@@ -166,8 +165,8 @@ const FORM_STYLES = `
   .nexus-image-zone {
     border-radius: 14px;
     padding: 16px;
-    background: rgba(124,92,252,0.04);
-    border: 1px solid rgba(124,92,252,0.16);
+    background: hsl(var(--muted) / 0.5);
+    border: 1px solid hsl(var(--border));
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -175,26 +174,26 @@ const FORM_STYLES = `
   .nexus-image-placeholder {
     height: 180px;
     border-radius: 10px;
-    border: 1px dashed rgba(124,92,252,0.25);
+    border: 1px dashed hsl(var(--border));
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #4b4870;
+    color: hsl(var(--muted-foreground));
     font-size: 13px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Poppins', sans-serif;
     gap: 8px;
-    background: rgba(124,92,252,0.02);
+    background: hsl(var(--muted) / 0.35);
   }
 
   /* AI modal textarea */
   .nexus-modal-form textarea,
   .nexus-modal-form input {
-    background: #05050d !important;
-    color: #eeeaf8 !important;
-    -webkit-text-fill-color: #eeeaf8 !important;
-    border: 1px solid rgba(124,92,252,0.22) !important;
+    background: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    border: 1px solid hsl(var(--border)) !important;
     border-radius: 12px !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 13.5px !important;
     outline: none !important;
     padding: 10px 14px !important;
@@ -204,17 +203,17 @@ const FORM_STYLES = `
   }
   .nexus-modal-form textarea:focus,
   .nexus-modal-form input:focus {
-    border-color: rgba(124,92,252,0.6) !important;
-    box-shadow: 0 0 0 3px rgba(124,92,252,0.12) !important;
+    border-color: hsl(var(--foreground) / 0.5) !important;
+    box-shadow: 0 0 0 3px hsl(var(--foreground) / 0.08) !important;
   }
   .nexus-modal-form textarea::placeholder,
   .nexus-modal-form input::placeholder {
-    color: #3e3a5e !important;
-    -webkit-text-fill-color: #3e3a5e !important;
+    color: hsl(var(--muted-foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--muted-foreground)) !important;
   }
   .nexus-modal-label {
-    color: #d4cfee;
-    font-family: 'DM Sans', sans-serif;
+    color: hsl(var(--muted-foreground));
+    font-family: 'Poppins', sans-serif;
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.04em;
@@ -228,8 +227,8 @@ const FORM_STYLES = `
     margin-top: 16px;
     border-radius: 12px;
     padding: 16px;
-    background: rgba(124,92,252,0.06);
-    border: 1px solid rgba(124,92,252,0.2);
+    background: hsl(var(--muted) / 0.7);
+    border: 1px solid hsl(var(--border));
   }
   .nexus-generated-label {
     margin: 0 0 8px;
@@ -237,36 +236,37 @@ const FORM_STYLES = `
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #7c5cfc;
-    font-family: 'DM Sans', sans-serif;
+    color: hsl(var(--foreground));
+    font-family: 'Poppins', sans-serif;
   }
   .nexus-generated-text {
     font-size: 13px;
-    color: #c4b5fd;
+    color: hsl(var(--foreground));
     white-space: pre-wrap;
     line-height: 1.6;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Poppins', sans-serif;
   }
 
   /* Action button inside form */
   .nexus-action-btn {
     display: inline-flex; align-items: center; gap: 7px;
     padding: 9px 16px; border-radius: 10px;
-    font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; font-family: 'Poppins', sans-serif;
     cursor: pointer; border: none; outline: none;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    transition: transform 0.15s ease, background 0.15s ease;
     white-space: nowrap;
   }
   .nexus-action-btn.primary {
-    background: linear-gradient(135deg, #7c5cfc 0%, #6d4fe0 100%);
-    color: #fff; box-shadow: 0 4px 16px rgba(124,92,252,0.35);
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
   }
-  .nexus-action-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,92,252,0.5); }
+  .nexus-action-btn.primary:hover { transform: translateY(-1px); }
   .nexus-action-btn.secondary {
-    background: rgba(124,92,252,0.08); color: #a78bfa;
-    border: 1px solid rgba(124,92,252,0.2);
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
   }
-  .nexus-action-btn.secondary:hover { background: rgba(124,92,252,0.14); color: #c4b5fd; transform: translateY(-1px); }
+  .nexus-action-btn.secondary:hover { background: hsl(var(--accent)); transform: translateY(-1px); }
 `;
 
 // ─── Styled select wrapper ─────────────────────────────────────────────────────
@@ -331,6 +331,7 @@ export function PostForm({
   mode = "create",
   initialPost,
   editAction,
+  workspaceId,
 }: PostFormProps) {
   const isEdit = mode === "edit";
   const [caption, setCaption] = useState(initialPost?.caption ?? "");
@@ -409,37 +410,11 @@ export function PostForm({
 
       {/* Card wrapper */}
       <div
+        className="card"
         style={{
-          borderRadius: 18,
-          padding: 1,
-          background:
-            "linear-gradient(135deg, rgba(124,92,252,0.35) 0%, rgba(244,113,181,0.12) 50%, rgba(124,92,252,0.08) 100%)",
           height: "fit-content",
         }}
-      >
-        <div
-          style={{
-            borderRadius: 17,
-            padding: "28px 24px",
-            background: "#0f0f1e",
-            position: "relative",
-            overflow: "hidden",
-          }}
         >
-          {/* Top glow line */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: "50%",
-              transform: "translateX(-50%)",
-              height: 1,
-              width: "60%",
-              background:
-                "linear-gradient(90deg, transparent, rgba(124,92,252,0.55), transparent)",
-            }}
-          />
 
           {/* Card header */}
           <div style={{ marginBottom: 24 }}>
@@ -450,8 +425,8 @@ export function PostForm({
                 fontWeight: 500,
                 letterSpacing: "0.13em",
                 textTransform: "uppercase",
-                color: "#7c5cfc",
-                fontFamily: "'DM Sans', sans-serif",
+                color: "hsl(var(--foreground))",
+                fontFamily: "'Poppins', sans-serif",
               }}
             >
               {isEdit ? "Editing" : "New"}
@@ -459,10 +434,10 @@ export function PostForm({
             <h2
               style={{
                 margin: 0,
-                fontFamily: "'Syne', sans-serif",
+                fontFamily: "'Poppins', sans-serif",
                 fontSize: 20,
                 fontWeight: 700,
-                color: "#eeeaf8",
+                color: "hsl(var(--foreground))",
                 letterSpacing: "-0.02em",
               }}
             >
@@ -472,9 +447,9 @@ export function PostForm({
               style={{
                 margin: "4px 0 0",
                 fontSize: 12,
-                color: "#7a7499",
+                color: "hsl(var(--muted-foreground))",
                 fontWeight: 300,
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'Poppins', sans-serif",
               }}
             >
               Structured form for scheduling and publishing workflow.
@@ -486,10 +461,10 @@ export function PostForm({
             <Tooltip label="Generate caption using AI">
               <button
                 type="button"
-                className="nexus-action-btn secondary"
+                className="nexus-action-btn secondary w-full justify-center sm:w-auto"
                 onClick={() => setAiModalOpen(true)}
               >
-                <Sparkles style={{ width: 14, height: 14 }} />
+                <Wand style={{ width: 14, height: 14 }} />
                 AI Caption
               </button>
             </Tooltip>
@@ -506,6 +481,11 @@ export function PostForm({
             {isEdit && initialPost && (
               <input type="hidden" name="id" value={initialPost.id} />
             )}
+            <input
+              type="hidden"
+              name="workspaceId"
+              value={workspaceId ?? initialPost?.workspace_id ?? ""}
+            />
             <input type="hidden" name="image_url" value={imageUrl} />
             <input
               ref={fileInputRef}
@@ -521,12 +501,7 @@ export function PostForm({
 
             {/* Title + Platform */}
             <div
-              style={{
-                display: "grid",
-                gap: 14,
-                gridTemplateColumns: "1fr 1fr",
-              }}
-              className="md:grid-cols-2 grid-cols-1"
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4"
             >
               <Input
                 label="Title"
@@ -550,12 +525,7 @@ export function PostForm({
 
             {/* Status + Category + Tags */}
             <div
-              style={{
-                display: "grid",
-                gap: 14,
-                gridTemplateColumns: "1fr 1fr 1fr",
-              }}
-              className="md:grid-cols-3 grid-cols-1"
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"
             >
               <NexusSelect
                 label="Status"
@@ -603,11 +573,7 @@ export function PostForm({
                 }}
               />
               <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
+                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
               >
                 <span className="nexus-char-counter">
                   {caption.length}/2000
@@ -629,11 +595,7 @@ export function PostForm({
 
             {/* Date + Time */}
             <div
-              style={{
-                display: "grid",
-                gap: 14,
-                gridTemplateColumns: "1fr 1fr",
-              }}
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4"
             >
               <NexusDateInput
                 label="Scheduled Date"
@@ -657,7 +619,7 @@ export function PostForm({
                   <Tooltip label="Upload or link a featured image">
                     <button
                       type="button"
-                      className="nexus-action-btn secondary"
+                      className="nexus-action-btn secondary w-full justify-center sm:w-auto"
                       onClick={() => setImageModalOpen(true)}
                     >
                       <UploadCloud style={{ width: 14, height: 14 }} />
@@ -674,7 +636,7 @@ export function PostForm({
                       width: "100%",
                       borderRadius: 10,
                       objectFit: "cover",
-                      border: "1px solid rgba(124,92,252,0.2)",
+                      border: "1px solid hsl(var(--border))",
                     }}
                   />
                 ) : (
@@ -689,8 +651,8 @@ export function PostForm({
                       <span
                         style={{
                           fontSize: 11,
-                          color: "#6b6890",
-                          fontFamily: "'DM Sans', sans-serif",
+                          color: "hsl(var(--muted-foreground))",
+                          fontFamily: "'Poppins', sans-serif",
                         }}
                       >
                         File: {selectedFileName}
@@ -700,8 +662,8 @@ export function PostForm({
                       <span
                         style={{
                           fontSize: 11,
-                          color: "#6b6890",
-                          fontFamily: "'DM Sans', sans-serif",
+                          color: "hsl(var(--muted-foreground))",
+                          fontFamily: "'Poppins', sans-serif",
                         }}
                       >
                         URL linked
@@ -739,7 +701,6 @@ export function PostForm({
             </SubmitButton>
           </form>
         </div>
-      </div>
 
       {/* ── AI Caption Modal — ALL LOGIC UNTOUCHED ── */}
       <Modal
@@ -810,7 +771,7 @@ export function PostForm({
                 className="nexus-action-btn secondary"
                 onClick={copyGeneratedCaption}
               >
-                {copied ? "Copied ✓" : "Copy"}
+                {copied ? "Copied" : "Copy"}
               </button>
             </div>
           </div>
@@ -872,3 +833,6 @@ function SubmitButton({
     </Button>
   );
 }
+
+
+

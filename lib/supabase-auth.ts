@@ -18,6 +18,10 @@ interface SupabaseAuthUserResponse {
   user_metadata?: Record<string, unknown>;
 }
 
+interface SupabaseAdminUsersResponse {
+  users?: SupabaseAuthUserResponse[];
+}
+
 export interface SupabaseSessionResponse {
   access_token: string;
   refresh_token: string;
@@ -106,6 +110,31 @@ export async function exchangePasswordForSession(
   return (await response.json()) as SupabaseSessionResponse;
 }
 
+export async function exchangeRefreshTokenForSession(
+  refreshToken: string,
+): Promise<SupabaseSessionResponse> {
+  const { url, anonKey } = getSupabaseAuthEnv();
+
+  const response = await authFetch(
+    `${url}/auth/v1/token?grant_type=refresh_token`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(await parseErrorMessage(response));
+  }
+
+  return (await response.json()) as SupabaseSessionResponse;
+}
+
 export async function createUserWithAdmin(
   fullName: string,
   email: string,
@@ -135,6 +164,74 @@ export async function createUserWithAdmin(
   if (!response.ok) {
     throw new Error(await parseErrorMessage(response));
   }
+}
+
+export async function findAuthUserByEmail(
+  email: string,
+): Promise<{ id: string; email?: string } | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const { url, serviceRoleKey } = getSupabaseAuthEnv({
+    requireServiceRole: true,
+  });
+
+  const response = await authFetch(
+    `${url}/auth/v1/admin/users?email=${encodeURIComponent(normalizedEmail)}&per_page=1&page=1`,
+    {
+      method: "GET",
+      headers: {
+        apikey: serviceRoleKey!,
+        Authorization: `Bearer ${serviceRoleKey!}`,
+      },
+    },
+  );
+
+  let users: SupabaseAuthUserResponse[] = [];
+
+  if (response.ok) {
+    const body = (await response.json().catch(() => null)) as
+      | SupabaseAdminUsersResponse
+      | null;
+    users = body?.users ?? [];
+  } else {
+    // Some Supabase versions don't support filtering by `email` in this endpoint.
+    // Fall back to listing a page of users and filtering in-process.
+    const fallbackResponse = await authFetch(
+      `${url}/auth/v1/admin/users?per_page=200&page=1`,
+      {
+        method: "GET",
+        headers: {
+          apikey: serviceRoleKey!,
+          Authorization: `Bearer ${serviceRoleKey!}`,
+        },
+      },
+    );
+
+    if (!fallbackResponse.ok) {
+      throw new Error(await parseErrorMessage(fallbackResponse));
+    }
+
+    const fallbackBody = (await fallbackResponse.json().catch(() => null)) as
+      | SupabaseAdminUsersResponse
+      | null;
+    users = fallbackBody?.users ?? [];
+  }
+
+  const user = users.find(
+    (item) => item.email?.toLowerCase() === normalizedEmail,
+  );
+  if (!user?.id) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    email: user.email,
+  };
 }
 
 export async function sendPasswordResetEmail(email: string): Promise<void> {
@@ -226,6 +323,11 @@ export async function clearAuthSessionCookies(): Promise<void> {
 export async function getAccessTokenFromCookies(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(AUTH_ACCESS_COOKIE)?.value ?? null;
+}
+
+export async function getRefreshTokenFromCookies(): Promise<string | null> {
+  const cookieStore = await cookies();
+  return cookieStore.get(AUTH_REFRESH_COOKIE)?.value ?? null;
 }
 
 // update authenticated user's profile or password. the caller must supply a

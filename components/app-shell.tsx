@@ -20,34 +20,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isAuthRoute) {
     return (
-      <div
-        style={{ minHeight: "100vh", background: "#07070f", color: "#eeeaf8" }}
-      >
+      <div className="min-h-screen bg-background text-foreground">
         <MainContent>{children}</MainContent>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        background: "#07070f",
-        color: "#eeeaf8",
-        overflow: "hidden",
-      }}
-    >
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       <ScheduledPostNotifier />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          minWidth: 0,
-        }}
-      >
+      <div className="flex flex-col flex-1 min-w-0">
         <Header
           onMenuToggle={() => setSidebarOpen((o) => !o)}
           sidebarOpen={sidebarOpen}
